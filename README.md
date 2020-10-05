@@ -36,4 +36,4 @@ Let's compare the result for the following (nonsense) LaTeX code:
 
 <img width="741" alt="Screen Shot 2020-10-04 at 10 34 21 PM" src="https://user-images.githubusercontent.com/177243/95043610-24f59c00-0692-11eb-9835-3de1f71ab11c.png">
 
-(I'd love to clean up that horrible angle bracket, but I don't currently use them in any LaTeX I need converted at the moment)
+(I'd love to clean up that horrible angle bracket, but I don't currently use them in any LaTeX I need converted, so I'm in no rush)
