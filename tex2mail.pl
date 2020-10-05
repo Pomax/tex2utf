@@ -1,20 +1,16 @@
 #!/usr/local/bin/perl
 
-# UTF8-massaged version of https://ctan.org/pkg/tex2mail
-# Updated October 2020, original header follows.
-# ---
-
 # $Id: tex2mail.in,v 1.1 2000/10/27 19:13:53 karim Exp $
 #
 # Features:
-#      % at the end of a line followed by \n\n is recognized as end of
+#      % at the end of a line followed by \n\n is recognized as end of 
 #      paragraph :-(
 #
 # Change log is at bottom.
 #
 # Options:
 #	linelength=75		# Cut at this line
-#	maxdef=400		# definition loops: croak if many substitutions
+#	maxdef=400		# definition loops: croak if many substitutions 
 #	debug=0
 #	by_par=0		# Expect each paragraph to be terminated
 #				# by *exactly* 2 "\n", and do not print
@@ -23,13 +19,15 @@
 #	ragged			# leave right ragged
 #	noindent		# assume \noindent everywhere
 
-use utf8;
-
-eval 'require "./newgetopt.pl"; &NGetOpt("linelength=i","maxdef=i","debug=i","by_par", "TeX", "ragged", "noindent")' || warn "Errors during parsing command line options" . ($@ ? ": $@" : '') . ".\n";
-
+eval 'require "newgetopt.pl";
+  &NGetOpt("linelength=i","maxdef=i","debug=i","by_par", "TeX",
+	   "ragged", "noindent")'
+    || warn "Errors during parsing command line options" .
+	($@ ? ": $@" : '') . ".\n";
 $linelength= $opt_linelength || 150;
 $maxdef= $opt_maxdef || 400;
 $debug=$opt_debug;
+
 $notusualtoks="\\\\" . '\${}^_~&@';
 $notusualtokenclass="[$notusualtoks]";
 $usualtokenclass="[^$notusualtoks]";
@@ -84,7 +82,7 @@ sub cut {
     # $st1 = $` . $1;
     # $sp1 = ($st1 =~ /(\s)/g);
     # $sp2 = ($st2 =~ /(\s)/g);
-    #}
+    #}  
   }
   return ("$h,$length,$b,$sp1,$st1","$h,$l2,$b,$sp2,$st2");
 }
@@ -92,10 +90,10 @@ sub cut {
 # Outputs a record
 
 sub printrecord {
-  warn "Printing $_[0]\n__ENDPRINT__\n" if $debug & $debug_record;
+  warn "Printing $_[0]\n__ENDPRINT__\n" if $debug & $debug_record;  
   local($h,$l,$b,$sp,$str)=split(/,/,shift,5);
   print $str,"\n";
-}
+} 
 
 # Joins two records
 
@@ -128,13 +126,13 @@ sub join {
   # apparently, it should be OK for PARI...
   for (0..$h2-1) {
     $str[$b-$b2+$_] .= " " x ($l1 - length ($str[$b-$b2+$_])) . $str2[$_];
-  }
+  } 
   return "$h,$l,$b,$sp," . join("\n",@str);
-}
+} 
 
 # The current line is contained in the array @out of records and, possibly,
 # one additional record $last. If $last exists, $islast is set to 1.
-# The output channel length is contained in $linelength, the accumulated
+# The output channel length is contained in $linelength, the accumulated 
 # length of @out and $last is contained in $curlength.
 # We guaranty that if $curlength>$linelength, then @out is empty.
 
@@ -144,7 +142,7 @@ sub length {
   (warn "Wrong format of a record `$_[0]'", return 0)
       unless $_[0] =~ /^\d+,(\d+)/;
   $1;
-}
+} 
 
 # Gets a height of a record
 
@@ -191,7 +189,7 @@ sub exp_sp {$c1++;$c2=0 if $c1>$re; return " " x ($c2+$fr+1);}
 # If gets a true argument, does not expand spaces
 
 sub print {
-  warn "Printing...\n" if $debug & $debug_flow;
+  warn "Printing...\n" if $debug & $debug_flow; 
   local($last,$l,$exp) = ($#level? $chunks[$level[1]]-1: $#out);
   ($last >=0) || return;
   $l=&length($out[0]);
@@ -203,10 +201,10 @@ sub print {
   if ($debug & $debug_length)  {
     if ($l != $curlength) {
       for (0..$last) {
-        warn "Wrong lengths Record $_ $out[$_]\n__ENDREC__\n" ;
+        warn "Wrong lengths Record $_ $out[$_]\n__ENDREC__\n" ; 
       }
-    }
-  }
+    } 
+  } 
   $curlength=$l;
   warn "l=$l, linelength=$linelength, curlength=$curlength\n"
     if $debug & $debug_length;
@@ -216,7 +214,7 @@ sub print {
     warn "entered branch for long string\n"
       if $debug & $debug_length;
     $exp=0;
-    (($out[$last] =~ s/\s+$//) && ($l+=length($&)))
+    (($out[$last] =~ s/\s+$//) && ($l+=length($&))) 
         if $out[$last] =~ /^0,/;
     warn "l=$l with whitespace\n"
       if $debug & $debug_length;
@@ -225,11 +223,11 @@ sub print {
     for (0..$last) {
       ($str,$h)=(split(/,/,$out[$_],5))[4,0];
       (@t = ($str =~ /( )/g), $exp+=@t) if (!$h);
-    }
+    } 
     if ($exp) {
       $re=$l % $exp;
       $fr=int(($l-$re)/$exp);
-      warn "$l Extra spaces in $exp places, Fr=$fr," .
+      warn "$l Extra spaces in $exp places, Fr=$fr," . 
           " Remainder=$re, LL=$linelength, CL=$curlength\n" if $debug & $debug_length;
       $c1=0;
       $c2=1;
@@ -239,9 +237,9 @@ sub print {
           $str =~ s/ /&exp_sp/ge;
           $out[$_]=&string2record($str);
         }
-      }
-    }
-  }
+      } 
+    }     
+  } 
   else {warn "Do not want to expand $l spaces\n" if $debug & $debug_length;}
  }
   if ($last >= 1) {
@@ -250,7 +248,7 @@ sub print {
     }
   }
   $l=&length($out[0]);
-  warn "LL=$linelength, CurL=$curlength, OutL=$l\n" if $debug & $debug_length;
+  warn "LL=$linelength, CurL=$curlength, OutL=$l\n" if $debug & $debug_length;  
   &printrecord($out[0]);
   $curlength=0;
   if ($#out>$last) {
@@ -258,25 +256,25 @@ sub print {
     for (0..$#chunks) {$chunks[$_] -= $last+1;}
   } else {
     @out=();
-  }
+  } 
   if ($#level) {
     splice(@chunks,1,$level[1]-2);
   } else {
     @chunks=(0);
-  }
+  }   
 }
-
+  
 # Cuts prepared piece and arg into printable parts (unfinished)
 # Suppose that level==0
 
 sub prepare_cut {
-  warn "Preparing to cut $_[0]\n" if $debug & $debug_flow;
+  warn "Preparing to cut $_[0]\n" if $debug & $debug_flow;  
   warn "B:Last chunk number $#chunks, last record $#out\n" if $debug & $debug_flow;
   (warn "\$#level non 0", return $_[0]) if ($#level!=0);
   local($lenadd)=(&length($_[0]));
   local($lenrem)=($linelength-$curlength);
   if ($lenadd+$curlength<=$linelength) {
-    warn "No need to cut, extra=$lenrem\n" if $debug & $debug_flow;
+    warn "No need to cut, extra=$lenrem\n" if $debug & $debug_flow; 
     return $_[0];
   }
   # Try to find a cut in the added record before $lenrem
@@ -285,11 +283,11 @@ sub prepare_cut {
   local($good)=(0);
   if ($h<2) {
     while ($lenrem<$lenadd && ($ind=rindex($str," ",$lenrem))>-1) {
-      warn "Cut found at $ind, lenrem=$lenrem\n" if $debug & $debug_flow;
+      warn "Cut found at $ind, lenrem=$lenrem\n" if $debug & $debug_flow; 
       $good=1;
-      # $ind=1 means we can cut 2 chars
+      # $ind=1 means we can cut 2 chars 
       @p= &cut($ind+1,$rec);
-      warn "After cut: @p\n" if $debug & $debug_record;
+      warn "After cut: @p\n" if $debug & $debug_record; 
       push(@out,$p[0]);
       $curlength+=$ind+1;
       #if ($#out!=$chunks[$#chunks]) {push(@chunks,$#out);}
@@ -318,15 +316,15 @@ sub prepare_cut {
     for (0..$#out) {
       ($h,$str)=(split(/,/,$out[$#out-$_],5))[0,4];
       if ($h<2 && ($ind=rindex($str," "))>-1 && ($ind>0 || $_<$#out)) {
-        warn "Cut found at $ind, in chunk $#out-$_\n"
-            if $debug & $debug_flow;
+        warn "Cut found at $ind, in chunk $#out-$_\n" 
+            if $debug & $debug_flow;  
         # split at given position
         @p=&cut($ind+1,$out[$#out-$_]);
         $out[$#out-$_]=$p[0];
         @p=($p[1],@out[$#out-$_+1..$#out]);
         @out=@out[0..$#out-$_];
-warn "\@p is !", join('!', @p), "!\n\@out is !", join('!', @out), "!\n"
-            if $debug & $debug_flow;
+warn "\@p is !", join('!', @p), "!\n\@out is !", join('!', @out), "!\n" 
+            if $debug & $debug_flow;	
         &print();
 	warn "did reach that\n"
 	  if $debug & $debug_length;
@@ -343,7 +341,7 @@ warn "\@p is !", join('!', @p), "!\n\@out is !", join('!', @out), "!\n"
       if $debug & $debug_length;
   }
   return &prepare_cut if $good;
-  warn "No cut found!\n" if $debug & $debug_flow;
+  warn "No cut found!\n" if $debug & $debug_flow; 
   # If anything else fails use force
   &print();
   while (&length($rec)>$linelength) {
@@ -351,15 +349,15 @@ warn "\@p is !", join('!', @p), "!\n\@out is !", join('!', @out), "!\n"
     @out=($p[0]);
     &print();
     $rec=$p[1];
-  }
+  } 
   $curlength=0;
   return $rec;
-}
+} 
 
 # Adds a record to the output list
 
 sub commit {
-  warn "Adding $_[0]\n" if $debug & $debug_flow;
+  warn "Adding $_[0]\n" if $debug & $debug_flow;  
   warn "B:Last chunk number $#chunks, last record $#out\n" if $debug & $debug_flow;
   local($rec)=@_;
   if ($#level==0) {
@@ -367,7 +365,7 @@ sub commit {
     if ($curlength+$len>$linelength) {
       $rec=&prepare_cut;
       $len=&length($rec);
-    }
+    } 
     $curlength+=$len;
   }
   push(@out,$rec);
@@ -382,7 +380,7 @@ sub commit {
     }
   }
   warn "curlength=$curlength on level=$#level\n" if $debug & $debug_length;
-}
+} 
 
 # Calls a subroutine, possibly with arguments
 
@@ -396,7 +394,7 @@ sub callsub {
 # Simulates Removing a record from the output list (unfinished)
 
 sub uncommit {
-  warn "Deleting...\n" if $debug & $debug_flow;
+  warn "Deleting...\n" if $debug & $debug_flow; 
   warn "B:Last chunk number $#chunks, last record $#out\n" if $debug & $debug_flow;
   (warn "Nothing to uncommit", return) if $#out<0;
   if ($#level==0) {
@@ -407,13 +405,13 @@ sub uncommit {
   $rec=$out[$#out];
   $out[$#out]=&empty();
   warn "UnCommit: now $chunks[$#chunks] $rec\n__ENDREC__\n"
-      if $debug & $debug_record;
+      if $debug & $debug_record;  
   #if ($#out<$chunks[$#chunks]) {pop(@chunks);}
   warn "a:Last chunk number $#chunks, last record $#out, the first chunk\n" if $debug & $debug_flow;
   warn " on the last level=$#level is $level[$#level], waiting for $wait[$#level]" if $debug & $debug_flow;
   warn "curlength=$curlength on level=$#level\n" if $debug & $debug_length;
   return $rec;
-}
+} 
 
 # finish($event, $force_one_group)
 
@@ -425,12 +423,12 @@ sub uncommit {
 # No additional action is executed
 
 sub finish {
-  warn "Finishing with $_[0]\n" if $debug & $debug_flow;
+  warn "Finishing with $_[0]\n" if $debug & $debug_flow;  
   local($event,$len,$rec)=(shift);
   if (($wait[$#level] ne "") && ($wait[$#level] ne $event)) {
     warn "Got `$event' while waiting for `$wait[$#wait]', rest=$par";
   }
-  warn "Got finishing event `$event' in the outermost block, rest=$par"
+  warn "Got finishing event `$event' in the outermost block, rest=$par" 
       unless $#level;
   if ($#out<$chunks[$level[$#level]]) {push(@out,&empty);}
   # Make anything after $level[$#level] one chunk if there is anything
@@ -449,7 +447,7 @@ sub finish {
   if ($#level==0 && !$_[0]) {
     for (@t) {&commit($_);}
   }
-  warn
+  warn 
       "a:Last $#chunks, the first on the last level=$#level is $level[$#level]"
            if $debug & $debug_flow;
   if ($wait[$#level] == $#chunks-$level[$#level]+1) {
@@ -457,7 +455,7 @@ sub finish {
     if ($sub eq "") {&finish($wait[$#level]);}
     else {&callsub($sub);}
   }
-}
+} 
 
 # finish level and discard it
 
@@ -480,19 +478,19 @@ sub finish_ignore {
 # Special events: If number, wait this number of chunks
 
 sub start {
-  warn "Beginning with $_[0], $_[1]\n" if $debug & $debug_flow;
+  warn "Beginning with $_[0], $_[1]\n" if $debug & $debug_flow; 
   warn "B:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
   if ($chunks[$level[$#level]]<=$#out && $chunks[$#chunks]<=$#out) {
     # the last level is non empty
-    push(@chunks,$#out+1);
-  }
-  push(@level,$#chunks);
-  push(@tokenByToken,0);
-  $wait[$#level]=shift;
+    push(@chunks,$#out+1); 
+  } 
+  push(@level,$#chunks); 
+  push(@tokenByToken,0); 
+  $wait[$#level]=shift; 
   if ($#_<0) {$action[$#level]="";} else {$action[$#level]=shift;}
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
-}
-
+} 
+    
 # Asserts that the given number of chunks exists in the last level
 
 sub assertHave {
@@ -502,12 +500,12 @@ sub assertHave {
     return 0;
   }
   return 1;
-}
+} 
 
 # Takes the last ARGUMENT chunks, collapse them to records
 
 sub collapse {
-  warn "Collapsing $_[0]...\n" if $debug & $debug_flow;
+  warn "Collapsing $_[0]...\n" if $debug & $debug_flow; 
   local($i,$ii,$_)=(shift);
   if (($ii=$#chunks-$level[$#level]+1)<$i) {
     warn "Too few chunks ($ii) in inner level, expecting $i";
@@ -516,12 +514,12 @@ sub collapse {
   if ($i>0) {
     for (0..$i-1) {
       &collapseOne($#chunks-$_);
-    }
+    } 
     for (1..$i-1) {
       $chunks[$#chunks-$_+1]=$chunks[$#chunks-$i+1]+$i-$_;
-    }
-  }
-}
+    } 
+  } 
+} 
 
 # Collapses all the chunks on given level
 
@@ -537,31 +535,31 @@ sub collapseOne {
         warn "Collapsing_one $n, records $chunks[$n]..$last\n"
                 if $debug & $debug_flow;
   return unless $last>$chunks[$n];
-  warn "Collapsing chunk $n beginning at $chunks[$n], ending at $last\n" if $debug & $debug_flow;
+  warn "Collapsing chunk $n beginning at $chunks[$n], ending at $last\n" if $debug & $debug_flow; 
   for ($chunks[$n]+1..$last) {
     $out=&join($out,$out[$_]);
-  }
+  } 
   splice(@out,$chunks[$n],$last+1-$chunks[$n],$out);
   # $#out-=$last-$chunks[$n]; #bug in perl?
   warn "Collapsed $chunks[$n]: $out[$chunks[$n]]\n__END__\n" if $debug & $debug_record;
-}
+} 
 
 # Return an empty record
 
 sub empty {
   return "0,0,0,0,";
-}
+} 
 
 # Commits a record with a sum symbol
 
 sub sum {
   &commit("4,3,2,0," . <<'EOF');
 ___
-\
+\   
  >
-/__
+/__ 
 EOF
-}
+} 
 
 # Additional argument specifies if to make not-expandable, not-trimmable
 
@@ -585,7 +583,7 @@ sub record_forcelength {
 sub finishBuffer {
   while ($#level>0) {&finish("");}
   &print(1);
-}
+} 
 
 # Takes two records, returns a record that concatenates them vertically
 # To make fraction simpler, baseline is the last line of the first record
@@ -598,9 +596,9 @@ sub vStack {
   local($h,$l,$b)=($h1+$h2, ($l1>$l2 ? $l1: $l2), $h1-1);
   warn "\$h1=$h1, \$h2=$h2, Vstacked: $h,$l,$b,0,$str1\n$str2\n__END__\n" if $debug & $debug_record;
   return "$h,$l,$b,0,$str1\n$str2";
-}
+} 
 
-# Takes two records, returns a record that contains them and forms
+# Takes two records, returns a record that contains them and forms 
 # SupSub block
 
 sub superSub {
@@ -610,9 +608,9 @@ sub superSub {
   $h2 || $h2++;
   local($h,$l)=($h1+$h2+1, ($l1>$l2 ? $l1: $l2));
   return "$h,$l,$h1,0,$str1\n\n$str2";
-}
+} 
 
-# Takes two records, returns a record that contains them and forms
+# Takes two records, returns a record that contains them and forms 
 # SupSub block
 
 sub subSuper {
@@ -622,18 +620,18 @@ sub subSuper {
   $h2 || $h2++;
   local($h,$l)=($h1+$h2+1, ($l1>$l2 ? $l1: $l2));
   return "$h,$l,$h1,0,$str2\n\n$str1";
-}
+} 
 
-# Takes the last two records, returns a record that contains them and forms
+# Takes the last two records, returns a record that contains them and forms 
 # SupSub block
 
 sub f_subSuper {
-  warn "Entering f_subSuper...\n" if $debug & $debug_flow;
+  warn "Entering f_subSuper...\n" if $debug & $debug_flow;  
   &trim(2);
   &collapse(2);
   &assertHave(2) || &finish("",1);
   &sup_sub(0,1);
-}
+} 
 
 sub sup_sub {
   local($p1,$p2)=($#out-shift,$#out-shift);
@@ -654,27 +652,27 @@ sub sup_sub {
     $out[$#out]="$h,$l,$h1,0,$str1\n";
   } else {
     $out[$#out]="$h,$l,$h1,0,$str1\n\n$str2";
-  }
+  } 
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
   &finish(2,1);
-}
+} 
 
-# Takes the last two records, returns a record that contains them and forms
+# Takes the last two records, returns a record that contains them and forms 
 # SupSub block
 
 sub f_superSub {
-  warn "Entering f_superSub...\n" if $debug & $debug_flow;
+  warn "Entering f_superSub...\n" if $debug & $debug_flow;  
   &trim(2);
   &collapse(2);
   &assertHave(2) || &finish("",1);
   &sup_sub(1,0);
-}
+} 
 
 # digest \begin{...} and similar: handles argument to a subroutine
 # given as argument
 
 sub f_get1 {
-  warn "Entering f_get1...\n" if $debug & $debug_flow;
+  warn "Entering f_get1...\n" if $debug & $debug_flow;  
   (warn "Argument of f_get1 consists of 2 or more chunks", return)
       if $#out != $chunks[$#chunks];
   local($rec,$sub);
@@ -683,10 +681,10 @@ sub f_get1 {
   $rec=~s/.*,//;
   $sub=shift;
   defined $sub ? return &$sub($rec): return $rec;
-}
+} 
 
 sub f_begin {
-  warn "Entering f_begin...\n" if $debug & $debug_flow;
+  warn "Entering f_begin...\n" if $debug & $debug_flow; 
   &collapse(1);
   &assertHave(1) || &finish("");
   local($arg,$env)=(&f_get1());
@@ -698,7 +696,7 @@ sub f_begin {
     local($b,$e)=split(/,/,$env);
     for (split(":",$b)) {&callsub($_);}
   } else {&puts("\\begin{$arg}");}
-}
+} 
 
 sub f_end {
   warn "Entering f_end...\n" if $debug & $debug_flow;
@@ -713,7 +711,7 @@ sub f_end {
     local($b,$e)=split(/,/,$env,2);
     for (split(":",$e)) {&callsub($_);}
   } else {&puts("\\end{$arg}");}
-}
+} 
 
 
 sub f_literal_no_length {
@@ -728,7 +726,7 @@ sub f_literal_no_length {
 sub f_discard {
   warn "Entering f_discard...\n" if $debug & $debug_flow;
   &finish_ignore($wait[$#level]);
-}
+} 
 
 # Takes a number and a record, returns a centered record
 
@@ -745,9 +743,9 @@ sub center {
     if ($first) {$first=0;}
     else {$out .= "\n";}
     $out .= " " x $left . $_;
-  }
+  } 
   return "$h1,$len,$b1,0,$out";
-}
+} 
 
 # Example of radical
 #<<'EOF';
@@ -757,11 +755,11 @@ sub center {
 <<EOF;				# To hide HERE-DOC start above  from old CPerl
 EOF
 
-# Takes the last record, returns a record that contains it and forms
+# Takes the last record, returns a record that contains it and forms 
 # radical block
 
 sub f_radical {
-  warn "Entering f_radical...\n" if $debug & $debug_flow;
+  warn "Entering f_radical...\n" if $debug & $debug_flow; 
   &trim(1);
   &collapse(1);
   &assertHave(1) || &finish("",1);
@@ -769,47 +767,47 @@ sub f_radical {
   local($h,$l,$b)=($out[$#out] =~ /^(\d+),(\d+),(\d+)/g);
   $h || $h++;
   local($out,$b1,$h1);
-  $out=&vStack(&string2record(("─" x $l)."┐" ),$out[$#out]);
+  $out=&vStack(&string2record(("-" x $l)."+" ),$out[$#out]);
   $b1=$b+1;
   $h1=$h+1;
   #$out =~ s/^(\d+,\d+,)(\d+)/\1$b1/;
   &setbaseline($out,$b1);
-  $out[$#out]=&join("$h1,2,$b1,0, ┌\n" . (" │\n" x ($h-1)) . '⟍│',$out);
+  $out[$#out]=&join("$h1,2,$b1,0, +\n" . (" |\n" x ($h-1)) . '\|',$out);
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
   &finish(1,1);
-}
+} 
 
-# Takes the last two records, returns a record that contains them and forms
+# Takes the last two records, returns a record that contains them and forms 
 # fraction block
 
 sub f_fraction {
-  warn "Entering f_fraction...\n" if $debug & $debug_flow;
+  warn "Entering f_fraction...\n" if $debug & $debug_flow;  
   &trim(2);
   &collapse(2);
   &assertHave(2) || &finish("",1);
   warn "Numer `$out[$#out-1]'\nDenom `$out[$#out]'\n__END__\n" if $debug & $debug_record;
   local($l1,$l2)=(&length($out[$#out-1]),&length($out[$#out]));
   local($len)=(($l1>$l2 ? $l1: $l2));
-  $out[$#out-1]=&vStack(&vStack(&center($len,$out[$#out-1]),
-                         &string2record("─" x $len)),
-                 &center($len,$out[$#out]));
+  $out[$#out-1]=&vStack(&vStack(&center($len,$out[$#out-1]),                 
+                         &string2record("-" x $len)),           
+                 &center($len,$out[$#out]));                          
   $#chunks--;
   $#out--;
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
   &finish(2,1);
-}
+} 
 
 sub f_choose {
-  warn "Entering f_choose...\n" if $debug & $debug_flow;
+  warn "Entering f_choose...\n" if $debug & $debug_flow;  
   &trim(2);
   &collapse(2);
   &assertHave(2) || &finish("",1);
   warn "Numer `$out[$#out-1]'\nDenom `$out[$#out]'\n__END__\n" if $debug & $debug_record;
   local($l1,$l2)=(&length($out[$#out-1]),&length($out[$#out]));
   local($len)=(($l1>$l2 ? $l1: $l2));
-  $out[$#out]=&vStack(&vStack(&center($len,$out[$#out-1]),
-                         &string2record(" " x $len)),
-                 &center($len,$out[$#out]));
+  $out[$#out]=&vStack(&vStack(&center($len,$out[$#out-1]),                 
+                         &string2record(" " x $len)),           
+                 &center($len,$out[$#out]));                          
   $#chunks++;
   $#out++;
   #warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
@@ -843,16 +841,16 @@ sub f_buildrel {
 sub fraction {
   local($l1,$l2)=(&length($_[0]),&length($_[1]));
   local($len)=(($l1>$l2 ? $l1: $l2));
-  return &vStack(&vStack(&center($len,shift),
-                         &string2record("-" x $len)),
-                 &center($len,shift));
-}
+  return &vStack(&vStack(&center($len,shift),                 
+                         &string2record("-" x $len)),           
+                 &center($len,shift));                          
+} 
 
 # Commits a given string
 
 sub puts {
   &commit(&string2record);
-}
+} 
 
 # digests an eaten paragraph
 
@@ -874,7 +872,7 @@ sub paragraph {
     unless $opt_noindent || ($par =~ s/^\s*\\noindent\s*([^a-zA-Z\s]|$)/\1/);
   while ($tokenByToken[$#level] ?
       ($par =~ s/^\s*($tokenpattern)//o): ($par =~ s/^($multitokenpattern)//o)) {
-    warn "tokenByToken=$tokenByToken[$#level], eaten=`$1'\n"
+    warn "tokenByToken=$tokenByToken[$#level], eaten=`$1'\n"  
         if $debug & $debug_parsing;
     if (($piece=$1) =~ /^$usualtokenclass/o) {
       # plain piece
@@ -928,18 +926,18 @@ sub paragraph {
         } elsif ($type eq "nothing") {
         } else {
           warn "Error with type `$type' while interpreting `$pure'";
-        }
+        } 
       } else {
         &puts($piece);
-      }
-    }
+      } 
+    } 
   }
-  warn "Unrecognized part of input `$par',\n\ttoken-by-token[$#level]=$tokenByToken[$#level]"
-    if $par ne "";
+  warn "Unrecognized part of input `$par',\n\ttoken-by-token[$#level]=$tokenByToken[$#level]" 
+    if $par ne "";   
   &finishBuffer if $#out>=0;
 # return 0 if eof();
   1;
-}
+} 
 
 sub subscript {
   &start(1,"f_subscript");
@@ -958,11 +956,11 @@ sub f_subscript {
   if (($par !~ s/^\s*\^//) &&
       ($par !~ s:^\s*\\begin\s*\{Sp\}:\\begin\{matrix\}:)) {
     &commit(&empty);
-  }
-}
+  }   
+} 
 
 sub f_overline {
-  warn "Entering f_overline...\n" if $debug & $debug_flow;
+  warn "Entering f_overline...\n" if $debug & $debug_flow;  
   &trim(1);
   &collapse(1);
   &assertHave(1) || &finish("",1);
@@ -975,10 +973,10 @@ sub f_overline {
   &setbaseline($out[$#out],$b);
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
   &finish(1,1);
-}
+} 
 
 sub f_underline {
-  warn "Entering f_underline...\n" if $debug & $debug_flow;
+  warn "Entering f_underline...\n" if $debug & $debug_flow; 
   &trim(1);
   &collapse(1);
   &assertHave(1) || &finish("",1);
@@ -989,10 +987,10 @@ sub f_underline {
   &setbaseline($out[$#out],$b);
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
   &finish(1,1);
-}
+} 
 
 sub f_not {
-  warn "Entering f_not...\n" if $debug & $debug_flow;
+  warn "Entering f_not...\n" if $debug & $debug_flow;  
   &collapse(1);
   &assertHave(1) || &finish("",1);
   warn "Negating $out[$#out]\n__END__\n" if $debug & $debug_record;
@@ -1008,7 +1006,7 @@ sub f_not {
   }
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
   &finish(1,1);
-}
+} 
 
 sub f_putunder {
   warn "Entering f_putunder...\n" if $debug & $debug_flow;
@@ -1030,7 +1028,7 @@ sub f_putunder {
 # Takes record to put over
 
 sub f_putover {
-  warn "Entering f_putover...\n" if $debug & $debug_flow;
+  warn "Entering f_putover...\n" if $debug & $debug_flow; 
   &trim(1);
   &collapse(1);
   &assertHave(1) || &finish("",1);
@@ -1045,7 +1043,7 @@ sub f_putover {
   &setbaseline($out[$#out],$b);
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
   &finish(1,1) unless shift;
-}
+} 
 
 sub f_putpar {
         warn "Entering f_putpar...\n" if $debug & $debug_flow;
@@ -1061,7 +1059,7 @@ sub f_putpar {
 
 sub f_putover_string {
   &f_putover(&string2record);
-}
+} 
 
 sub f_widehat {
         &trim(1);
@@ -1087,8 +1085,8 @@ sub f_superscript {
   if (($par !~ s/^\s*\_//) &&
       ($par !~ s:^\s*\\begin\s*\{Sb\}:\\begin\{matrix\}:)) {
     &commit(&empty);
-  }
-}
+  }   
+} 
 
 sub let {
         $par =~ s/^($tokenpattern)(= ?)?($tokenpattern)//o;
@@ -1165,7 +1163,7 @@ sub get_balanced {
 sub open_curly {
   #&puts("{") unless $tokenByToken[$#level];
   &start("}");
-}
+} 
 
 # Deletes extra spaces at the end of a record
 
@@ -1211,7 +1209,7 @@ sub dollar {
     &start('$');
     $par =~ s/^\s+//;
   }
-}
+} 
 
 sub ddollar {
   if ($wait[$#level] eq '$$') {
@@ -1235,7 +1233,7 @@ sub ddollar {
     &start('$$');
   }
   $par =~ s/^\s+//;
-}
+} 
 
 sub item {
   &finishBuffer;
@@ -1267,7 +1265,7 @@ sub ampersand {
     &trim(1);
     &collapse(1);
     &start('endCell');
-  }
+  } 
 }
 
 sub matrix {
@@ -1281,7 +1279,7 @@ sub endmatrix {
   &trim(1);
   &collapse(1);
   &finish('endRow',1);
-  # Now chunks correspond to rows of the matrix, records inside chunks to
+  # Now chunks correspond to rows of the matrix, records inside chunks to 
   # Cells
   &halign(split(";",shift));
   &finish('endMatrix',1);
@@ -1293,10 +1291,10 @@ sub endmatrixArg {
 
 # Takes a matrix in the following form: chunks on the last level
 # are row of the matrix, records inside chunks are cells.
-# Puts the resulting matrix in the first record on the given level
+# Puts the resulting matrix in the first record on the given level 
 # and truncates the rest
 
-# I'm trying to add parameters:
+# I'm trying to add parameters: 
 #	length to insert between columns
 #	Array of centering options one for a column (last one repeated if needed)
 #		Currently supported:	c for center
@@ -1330,7 +1328,7 @@ sub halign {
   # Now expand the cells
   warn "Widths of columns @w\n" if $debug & $debug_matrix;
   for $r (0..$#chunks-$level[$#level]) {
-    $last= ($r==$#chunks-$level[$#level]) ? $#out:
+    $last= ($r==$#chunks-$level[$#level]) ? $#out: 
                                             $chunks[$r+1+$level[$#level]]-1;
     warn "Row $r: last column " . ($last-$chunks[$r+$level[$#level]]) ."\n"
         if $debug & $debug_matrix;
@@ -1345,21 +1343,21 @@ sub halign {
             if $debug & $debug_matrix;
         $out[$chunks[$r+$level[$#level]]+$c]=
           &join($out[$chunks[$r+$level[$#level]]+$c],
-                &string2record(" " x
+                &string2record(" " x 
                   ($w[$c] - &length($out[$chunks[$r+$level[$#level]]+$c]))));
       } elsif ($c[$c] eq "r") {
         warn "Expanding row $r col $c to width $w[$c] on the left\n"
             if $debug & $debug_matrix;
         $out[$chunks[$r+$level[$#level]]+$c]=
           &join(&string2record(" " x
-                  ($w[$c]-$explength-
+                  ($w[$c]-$explength- 
                        &length($out[$chunks[$r+$level[$#level]]+$c]))),
                 $out[$chunks[$r+$level[$#level]]+$c]);
         $out[$chunks[$r+$level[$#level]]+$c]=
           &join($out[$chunks[$r+$level[$#level]]+$c],
                 &string2record(" " x $explength));
       } else {warn "Unknown centering option `$c[$c]' for halign";}
-    }
+    } 
   }
   # Now we creat rows
   &collapseAll;
@@ -1377,7 +1375,7 @@ sub halign {
 sub close_curly {
   &finish("}");
   #&puts("}") unless $tokenByToken[$#level]; # well, this can change under our foot...
-}
+} 
 
 sub at {
   local($c,$first,$second,$t,$m)=($par =~ /^(.)/);
@@ -1473,7 +1471,7 @@ sub noindent {
   }
 }
 
-# put strings vertically, returns a record with the second argument as baseline
+# put strings vertically, returns a record with the second argument as baseline 
 
 sub vputs {
   local($b)=($_[1]);
@@ -1533,37 +1531,26 @@ sub makehigh {
   $d=$h-$b;
   return if $h<2 || $h==2 && index("()<>",$str)>=0;
   local(@c);
-  # split pattern:
-  #  0: base string
-  #  1: oneside expander
-  #  2: real expander
-  #  3: top tip
-  #  4: bottom top
-  #  5: mid
-  if    ($str eq "(") {@c=split(":",'(: :│:╭:╰:│');}
-  elsif ($str eq ")") {@c=split(":",'): :│:╮:╯:│');}
-  elsif ($str eq "{") {@c=split(":",'{: :|:╭:╰:╡');}
-  elsif ($str eq "}") {@c=split(":",'}: :|:╮:╯:╞');}
-  elsif ($str eq "|" && $str eq "||")
+  if    ($str eq "(") {@c=split(":",'(: :|:/:\:|');}
+  elsif ($str eq ")") {@c=split(":",'): :|:\:/:|');}
+  elsif ($str eq "{") {@c=split(":",'{: :|:/:\:<');}
+  elsif ($str eq "}") {@c=split(":",'}: :|:\:/:>');}
+  elsif ($str eq "|" && $str eq "||") 
                       {@c=split(":",'|:|:|:|:|:|');}
-  elsif ($str eq "[") {@c=split(":",'[: :│:┌:└:│');}
-  elsif ($str eq "]") {@c=split(":",']: :│:┐:┘:│');}
+  elsif ($str eq "[") {@c=split(":",'[:[:|:[:[:|');}
+  elsif ($str eq "]") {@c=split(":",']:]:|:]:]:|');}
   elsif ($str eq "<" || $str eq ">") {
     return if $h==2;
     local($l)=($b);
-    $l = $d+1 if $b < $d+1;
+    $l=$d+1 if $b<$d+1;
     for (2..$l) {
-      $_[0]=&join($_[0], &vputs("⧸" . " " x (2*$_-3) . "⧹",$_-1)) if $str eq "<";
-      $_[0]=&join(&vputs("⧹" . " " x (2*$_-3) . "⧸",$_-1), $_[0]) if $str eq ">";
+      $_[0]=&join($_[0],
+                  &vputs("/" . " " x (2*$_-3) . "\\",$_-1)) if $str eq "<";
+      $_[0]=&join(&vputs("\\" . " " x (2*$_-3) . "/",$_-1),
+                  $_[0]) if $str eq ">";
     }
-    if ($str eq "<") {
-      $_[0] = &join($_[0], &string2record(" "));
-      $_[0] =~ s/< / ⟨/;
-    }
-    elsif ($str eq ">") {
-      $_[0]=&join(&string2record(" "), $_[0]);
-      $_[0] =~ s/>/❭/;
-    }
+    $_[0]=&join($_[0],&string2record(" ")) if $str eq "<";
+    $_[0]=&join(&string2record(" "),$_[0]) if $str eq ">";
     return;
   }
   else {return;}
@@ -1624,53 +1611,29 @@ sub f_leftright {
   &finish(3);
 }
 
-# Arguments from $b/$d:
-#
-#  0: ascent (number)
-#  1: descent (number)
-#
-# Arguments from @c:
-#
-#  2: base string
-#  3: oneside expander
-#  4: real expander
-#  5: top tip
-#  6: bottom top
-#  7: mid
-#
+# Arguments: Ascent, descent, base string, oneside expander, real expander
+#            0       1        2            3                 4
+#            Top tip, Bottom tip, Mid
+#            5        6           7
 # All component should be one character long
+
 sub makecompound {
-  $ascent = $_[0];
-  $descent = $_[1];
-
-  $base = $_[2];
-  $exp_one_side = $_[3];
-  $exp_real = $_[4];
-  $top = $_[5];
-  $bottom = $_[6];
-  $middle = $_[7];
-
-  if ($ascent>1 && $descent>0 && $exp_real eq $middle) {
-    return $top . $exp_real x ($ascent+$descent-2) . $bottom;
+  # If Mid is the same as real expander, all depends on the height only
+  # if there is extend on both sides
+  # If it is 3 or more
+  if ($_[0]>1 && $_[1]>0 && $_[4] eq $_[7]) {
+    return $_[5] . $_[4] x ($_[0]+$_[1]-2) . $_[6];
   }
-
   # No descent:
-  if ($descent <= 0) {
-    return $exp_one_side x ($ascent-1) . $base;
-  }
-
+  if ($_[1] <= 0) {return $_[3] x ($_[0]-1) . $_[2];}
   # No ascent:
-  if ($ascent <= 1) {
-    return $base . $exp_one_side x $descent;
-  }
-
-  # 
-  $p1 = ($ascent >= 2) ? $top . $exp_real x ($ascent-2) : $top;
-  $p3 = ($descent > 1) ? $exp_real x ($descent-1) . $bottom : $bottom;
-
-  print $ascent . ", " . $descent . ", " . $base . "\n";
-
-  return $p1 . $middle . $p3;
+  if ($_[0] <= 1) {return $_[2] . $_[3] x $_[1];}
+  local($mid,$asc,$des)=($_[2]);
+  # descent == 1
+  $des = ($_[1]==1) ? $_[2]: $_[4] x ($_[1]-1) . $_[6];
+  $asc  = ($_[0]==2) ? $_[2]: $_[5] . $_[4] x ($_[0]-2);
+  $mid = $_[7] unless $_[0]==2 || $_[1]==1;
+  return "$asc$mid$des";
 }
 
 sub arg2stack {push(@argStack,&get_balanced());}
@@ -1679,100 +1642,192 @@ sub par {&finishBuffer;&commit("1,5,0,0,     ")
 	   unless $par =~ s/^\s*\\noindent\s*(\s+|([^a-zA-Z\s])|$)/\2/;}
 
 $type{"\\sum"}="record";
-$contents{"\\sum"}="3,3,1,0," . <<'EOF';
-__ 
-❯  
-‾‾ 
+$contents{"\\sum"}="3,4,1,0," . <<'EOF';
+\~~   
+ >
+/__ 
 EOF
 
 $type{"\\int"}="record";
 $contents{"\\int"}="3,3,1,0," . <<'EOF';
- ╭ 
+ ,-
  |
- ╯ 
+-'
 EOF
 
 $type{"\\prod"}="record";
-$contents{"\\prod"}="2,3,1,0," . <<'EOF';
+$contents{"\\prod"}="3,3,1,0," . <<'EOF';
 ___
-│ │
+| |
+| |
+EOF
+
+$type{"\\Pi"}="record";
+$contents{"\\Pi"}="2,3,1,0," . <<'EOF';
+ _
+| |
 EOF
 
 $type{"\\Sigma"}="record";
 $contents{"\\Sigma"}="3,2,1,0," . <<'EOF';
 __
-❯ 
-‾‾
+>
+~~
 EOF
 
-$type{"\\oplus"}="string";
-$contents{"\\oplus"}="⊕";
+$type{"\\Delta"}="record";
+$contents{"\\Delta"}="2,2,0,0," . <<'EOF';
+/\
+~~
+EOF
 
-$type{"\\otimes"}="string";
-$contents{"\\otimes"}="⊗";
+$type{"\\oplus"}="record";
+$contents{"\\oplus"}="3,5,1,0," . <<'EOF';
+  _ 
+ (+)
+  ~
+EOF
 
-$type{"\\ominus"}="string";
-$contents{"\\ominus"}="⊖";
+$type{"\\otimes"}="record";
+$contents{"\\otimes"}="3,5,1,0," . <<'EOF';
+  _ 
+ (x)
+  ~
+EOF
 
-$type{"\\leq"}="string";
-$contents{"\\leq"}="≤";
+$type{"\\ominus"}="record";
+$contents{"\\ominus"}="3,5,1,0," . <<'EOF';
+  _ 
+ (-)
+  ~
+EOF
 
-$type{"\\equiv"}="string";
-$contents{"\\equiv"}="≡";
+$type{"\\leq"}="record";
+$contents{"\\leq"}="2,4,1,0," . <<'EOF';
+ _
+ <
+EOF
 
-$type{"\\geq"}="string";
-$contents{"\\geq"}="≥";
+$type{"\\equiv"}="record";
+$contents{"\\equiv"}="2,4,1,0," . <<'EOF';
+ _
+ =
+EOF
 
-$type{"\\partial"}="string";
-$contents{"\\partial"}="∂";
+$type{"\\geq"}="record";
+$contents{"\\geq"}="2,4,1,0," . <<'EOF';
+ _
+ >
+EOF
 
-$type{"\\forall"}="string";
-$contents{"\\forall"}="∀";
+$type{"\\partial"}="record";
+$contents{"\\partial"}="2,2,1,0," . <<'EOF';
+\
+d
+EOF
 
-$type{"\\exists"}="string";
-$contents{"\\exists"}="∃";
+$type{"\\forall"}="record";
+$contents{"\\forall"}="3,4,1,0," . <<'EOF';
+\__/
+ \/
+EOF
 
-$type{"\\owns"}="string";
-$contents{"\\owns"}="∋";
+$type{"\\exists"}="record";
+$contents{"\\exists"}="3,2,1,0," . <<'EOF';
+_.
+-|
+~'
+EOF
 
-$type{"\\ni"}="string";
-$contents{"\\ni"}="∌";
+$type{"\\owns"}="record";
+$contents{"\\owns"}="3,4,1,0," . <<'EOF';
+ _
+ -)
+ ~
+EOF
 
-$type{"\\in"}="string";
-$contents{"\\in"}="∈";
+$type{"\\ni"}="record";
+$contents{"\\ni"}="3,4,1,0," . <<'EOF';
+ _
+ -)
+ ~
+EOF
 
-$type{"\\notin"}="string";
-$contents{"\\notin"}="∉";
+$type{"\\in"}="record";
+$contents{"\\in"}="3,4,1,0," . <<'EOF';
+  _
+ (-
+  ~
+EOF
 
-$type{"\\qed"}="string";
-$contents{"\\qed"}="∎";
+$type{"\\notin"}="record";
+$contents{"\\notin"}="3,5,1,0," . <<'EOF';
+  |_
+ (|-
+  |~
+EOF
 
-$type{"\\pm"}="string";
-$contents{"\\pm"}="±";
+$type{"\\qed"}="record";
+$contents{"\\qed"}="2,6,1,0," . <<'EOF';
+    _
+   |_| 
+EOF
 
-$type{"\\mp"}="string";
-$contents{"\\mp"}="∓";
+$type{"\\pm"}="record";
+$contents{"\\pm"}="2,1,0,0," . <<'EOF';
++
+-
+EOF
 
-$type{"\\cong"}="string";
-$contents{"\\cong"}="≅";
+$type{"\\mp"}="record";
+$contents{"\\mp"}="2,1,1,0," . <<'EOF';
+_
++
+EOF
 
-$type{"\\neq"}="string";
-$contents{"\\neq"}="≠";
+$type{"\\cong"}="record";
+$contents{"\\cong"}="2,1,0,0," . <<'EOF';
+=
+~
+EOF
 
-$type{"\\nmid"}="string";
-$contents{"\\nmid"}="∤";
+$type{"\\neq"}="record";
+$contents{"\\neq"}="1,5,0,0," . <<'EOF';
+ =/= 
+EOF
 
-$type{"\\subset"}="string";
-$contents{"\\subset"}="⊂";
+$type{"\\nmid"}="record";
+$contents{"\\nmid"}="3,3,1,0," . <<'EOF';
+ |/
+ |
+/|
+EOF
 
-$type{"\\subseteq"}="string";
-$contents{"\\subseteq"}="⊆";
+$type{"\\subset"}="record";
+$contents{"\\subset"}="2,4,1,0," . <<'EOF';
+  _ 
+ (_ 
+EOF
 
-$type{"\\supseteq"}="string";
-$contents{"\\subseteq"}="⊇";
+$type{"\\subseteq"}="record";
+$contents{"\\subseteq"}="3,4,1,0," . <<'EOF';
+  _ 
+ (_ 
+  ~
+EOF
 
-$type{"\\supset"}="string";
-$contents{"\\supset"}="⊃";
+$type{"\\supseteq"}="record";
+$contents{"\\subseteq"}="3,4,1,0," . <<'EOF';
+ _ 
+ _) 
+ ~
+EOF
+
+$type{"\\supset"}="record";
+$contents{"\\supset"}="2,4,1,0," . <<'EOF';
+ _
+ _)
+EOF
 
 $type{"\\sqrt"}="sub1";
 $contents{"\\sqrt"}="radical";
@@ -1782,7 +1837,7 @@ $contents{"\\buildrel"}="buildrel";
 
 $type{"\\frac"}="sub2";
 $contents{"\\frac"}="fraction";
-
+  
 $type{"\\LITERALnoLENGTH"}="sub1";
 $contents{"\\LITERALnoLENGTH"}="literal_no_length";
 
@@ -1937,13 +1992,13 @@ for ("numberwithin","newtheorem","renewcommand","setcounter"
 }
 
 for ("equation","gather","align"
-     ) {$environment{"$_"}="ddollar,ddollar";}
+     ) {$environment{"$_"}="ddollar,ddollar";} 
 
 for ("matrix","CD","smallmatrix"
-     ) {$environment{"$_"}="matrix,endmatrix;1;c";}
+     ) {$environment{"$_"}="matrix,endmatrix;1;c";} 
 
 for ("document","split","enumerate"
-     ) {$environment_none{"$_"}++;}
+     ) {$environment_none{"$_"}++;} 
 
 $environment{"Sb"}="subscript:matrix,endmatrix;1;l";
 
@@ -1993,10 +2048,10 @@ $type{"\\backslash"}="string";
 $contents{"\\backslash"}="\\";
 
 $type{"\\approx"}="string";
-$contents{"\\approx"}=" ≅ ";
+$contents{"\\approx"}=" ~ ";
 
 $type{"\\simeq"}="string";
-$contents{"\\simeq"}=" ≃ ";
+$contents{"\\simeq"}=" ~ ";
 
 $type{"\\quad"}="string";
 $contents{"\\quad"}="   ";
@@ -2004,17 +2059,11 @@ $contents{"\\quad"}="   ";
 $type{"\\qquad"}="string";
 $contents{"\\qquad"}="     ";
 
-$type{"\\Delta"}="string";
-$contents{"\\Delta"}="△";
-
-$type{"\\Pi"}="string";
-$contents{"\\Pi"}="π";
-
 $type{"\\to"}="string";
-$contents{"\\to"}=" ──> ";
+$contents{"\\to"}=" --> ";
 
 $type{"\\from"}="string";
-$contents{"\\from"}=" <── ";
+$contents{"\\from"}=" <-- ";
 
 $type{"\\wedge"}="string";
 $contents{"\\wedge"}="/\\";
@@ -2032,7 +2081,7 @@ $type{"\\rhd"}="string";
 $contents{"\\rhd"}=" |> ";
 
 $type{"\\cdot"}="string";
-$contents{"\\cdot"}=" · ";
+$contents{"\\cdot"}=" . ";
 
 # $type{"\dot"}="string";
 # $contents{"\\dot"}=" . ";
@@ -2128,13 +2177,11 @@ if ($opt_TeX) {
   &defb("pmatrix") unless $opt_TeX;
 }
 
-## All the records should be specified before this point
-{
-  local(@a)=grep("record" eq $type{$_},keys %type);
-  for (@a) {
-    chop $contents{$_} if substr($contents{$_},length($contents{$_})-1,1) eq "\n";
-  }
-}
+  
+  ## All the records should be specified before this point
+  {local(@a)=grep("record" eq $type{$_},keys %type); 
+		for (@a) {chop $contents{$_} if 
+      substr($contents{$_},length($contents{$_})-1,1) eq "\n";}}
 
 for ("oplus","otimes","cup","wedge") {
   $type{"\\big$_"}=$type{"\\$_"};

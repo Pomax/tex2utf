@@ -4,6 +4,7 @@ This repo is a UTF8 massaging of the `tex2mail` tool (with some fixes around how
 
 The original can be found over on https://ctan.org/pkg/tex2mail.
 
+
 ## LaTeX
 
 Let's compare the result for the following (nonsense) LaTeX code:
@@ -28,15 +29,16 @@ Let's compare the result for the following (nonsense) LaTeX code:
 \]
 ```
 
+
 ## tex2mail result
 
-<img width="866" alt="Screen Shot 2020-10-04 at 10 34 11 PM" src="https://user-images.githubusercontent.com/177243/95043598-1e672480-0692-11eb-920a-b8d55486d91d.png">
+![](./preview-tex2mail.png)
+
 
 ## tex2utf result
 
-<img width="741" alt="Screen Shot 2020-10-04 at 10 34 21 PM" src="https://user-images.githubusercontent.com/177243/95043610-24f59c00-0692-11eb-9835-3de1f71ab11c.png">
+![](./preview-tex2utf.png)
 
-(I'd like to clean up that horrible angle bracket, but I don't currently use them in any LaTeX I need converted, so I'm in no rush)
 
 ## Todo's
 
