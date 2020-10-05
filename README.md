@@ -28,7 +28,7 @@ Let's compare the result for the following (nonsense) LaTeX code:
 \]
 ```
 
-## text2mail result
+## tex2mail result
 
 <img width="866" alt="Screen Shot 2020-10-04 at 10 34 11 PM" src="https://user-images.githubusercontent.com/177243/95043598-1e672480-0692-11eb-920a-b8d55486d91d.png">
 
