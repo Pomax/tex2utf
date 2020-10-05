@@ -1,5 +1,9 @@
 #!/usr/local/bin/perl
 
+# UTF8-massaged version of https://ctan.org/pkg/tex2mail
+# Updated October 2020, original header follows.
+# ---
+
 # $Id: tex2mail.in,v 1.1 2000/10/27 19:13:53 karim Exp $
 #
 # Features:
