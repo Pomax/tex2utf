@@ -37,3 +37,9 @@ Let's compare the result for the following (nonsense) LaTeX code:
 <img width="741" alt="Screen Shot 2020-10-04 at 10 34 21 PM" src="https://user-images.githubusercontent.com/177243/95043610-24f59c00-0692-11eb-9835-3de1f71ab11c.png">
 
 (I'd love to clean up that horrible angle bracket, but I don't currently use them in any LaTeX I need converted, so I'm in no rush)
+
+## Todo's
+
+I'd honestly love to get this turned into a Python script, because Perl programmers are a dying breed (I haven't worked with Perl in 20 years, so I spent way more time than I would have liked relearning how everything works) and having functions with actual named parameters is kind nice if you want folks to understand what's going on and possibly help improve the code.
+
+That said, if you feel this is something that can (finally) doo what you need, and it's doing something wrong, and you know how to fix it (or you know where it's going wrong even if you don't know exactly how to fix it): file an issue, or even a PR, and let's get this tool updated to modern standards!
