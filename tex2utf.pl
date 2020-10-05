@@ -1562,7 +1562,7 @@ sub makehigh {
     }
     elsif ($str eq ">") {
       $_[0]=&join(&string2record(" "), $_[0]);
-      $_[0] =~ s/>/❭/;
+      $_[0] =~ s/>/⟩/;
     }
     return;
   }
