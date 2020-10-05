@@ -19,6 +19,8 @@
 #	ragged			# leave right ragged
 #	noindent		# assume \noindent everywhere
 
+use utf8;
+
 eval 'require "./newgetopt.pl"; &NGetOpt("linelength=i","maxdef=i","debug=i","by_par", "TeX", "ragged", "noindent")' || warn "Errors during parsing command line options" . ($@ ? ": $@" : '') . ".\n";
 
 $linelength= $opt_linelength || 150;
@@ -763,12 +765,12 @@ sub f_radical {
   local($h,$l,$b)=($out[$#out] =~ /^(\d+),(\d+),(\d+)/g);
   $h || $h++;
   local($out,$b1,$h1);
-  $out=&vStack(&string2record(("-" x $l)."+" ),$out[$#out]);
+  $out=&vStack(&string2record(("─" x $l)."┐" ),$out[$#out]);
   $b1=$b+1;
   $h1=$h+1;
   #$out =~ s/^(\d+,\d+,)(\d+)/\1$b1/;
   &setbaseline($out,$b1);
-  $out[$#out]=&join("$h1,2,$b1,0, +\n" . (" |\n" x ($h-1)) . '\|',$out);
+  $out[$#out]=&join("$h1,2,$b1,0, ┌\n" . (" │\n" x ($h-1)) . '⟍│',$out);
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
   &finish(1,1);
 }
@@ -785,7 +787,7 @@ sub f_fraction {
   local($l1,$l2)=(&length($out[$#out-1]),&length($out[$#out]));
   local($len)=(($l1>$l2 ? $l1: $l2));
   $out[$#out-1]=&vStack(&vStack(&center($len,$out[$#out-1]),
-                         &string2record("-" x $len)),
+                         &string2record("─" x $len)),
                  &center($len,$out[$#out]));
   $#chunks--;
   $#out--;
@@ -1527,26 +1529,37 @@ sub makehigh {
   $d=$h-$b;
   return if $h<2 || $h==2 && index("()<>",$str)>=0;
   local(@c);
-  if    ($str eq "(") {@c=split(":",'(: :|:/:\:|');}
-  elsif ($str eq ")") {@c=split(":",'): :|:\:/:|');}
-  elsif ($str eq "{") {@c=split(":",'{: :|:/:\:<');}
-  elsif ($str eq "}") {@c=split(":",'}: :|:\:/:>');}
+  # split pattern:
+  #  0: base string
+  #  1: oneside expander
+  #  2: real expander
+  #  3: top tip
+  #  4: bottom top
+  #  5: mid
+  if    ($str eq "(") {@c=split(":",'(: :│:╭:╰:│');}
+  elsif ($str eq ")") {@c=split(":",'): :│:╮:╯:│');}
+  elsif ($str eq "{") {@c=split(":",'{: :|:╭:╰:╡');}
+  elsif ($str eq "}") {@c=split(":",'}: :|:╮:╯:╞');}
   elsif ($str eq "|" && $str eq "||")
                       {@c=split(":",'|:|:|:|:|:|');}
-  elsif ($str eq "[") {@c=split(":",'[:[:|:[:[:|');}
-  elsif ($str eq "]") {@c=split(":",']:]:|:]:]:|');}
+  elsif ($str eq "[") {@c=split(":",'[: :│:┌:└:│');}
+  elsif ($str eq "]") {@c=split(":",']: :│:┐:┘:│');}
   elsif ($str eq "<" || $str eq ">") {
     return if $h==2;
     local($l)=($b);
-    $l=$d+1 if $b<$d+1;
+    $l = $d+1 if $b < $d+1;
     for (2..$l) {
-      $_[0]=&join($_[0],
-                  &vputs("/" . " " x (2*$_-3) . "\\",$_-1)) if $str eq "<";
-      $_[0]=&join(&vputs("\\" . " " x (2*$_-3) . "/",$_-1),
-                  $_[0]) if $str eq ">";
+      $_[0]=&join($_[0], &vputs("/" . " " x (2*$_-3) . "\\",$_-1)) if $str eq "<";
+      $_[0]=&join(&vputs("\\" . " " x (2*$_-3) . "/",$_-1), $_[0]) if $str eq ">";
     }
-    $_[0]=&join($_[0],&string2record(" ")) if $str eq "<";
-    $_[0]=&join(&string2record(" "),$_[0]) if $str eq ">";
+    if ($str eq "<") {
+      $_[0] = &join($_[0],&string2record(" "));
+      $_[0] =~ s/</❬/;
+    }
+    elsif ($str eq ">") {
+      $_[0]=&join(&string2record(" "),$_[0]);
+      $_[0] =~ s/>/❭/;
+    }
     return;
   }
   else {return;}
@@ -1607,29 +1620,53 @@ sub f_leftright {
   &finish(3);
 }
 
-# Arguments: Ascent, descent, base string, oneside expander, real expander
-#            0       1        2            3                 4
-#            Top tip, Bottom tip, Mid
-#            5        6           7
+# Arguments from $b/$d:
+#
+#  0: ascent (number)
+#  1: descent (number)
+#
+# Arguments from @c:
+#
+#  2: base string
+#  3: oneside expander
+#  4: real expander
+#  5: top tip
+#  6: bottom top
+#  7: mid
+#
 # All component should be one character long
-
 sub makecompound {
-  # If Mid is the same as real expander, all depends on the height only
-  # if there is extend on both sides
-  # If it is 3 or more
-  if ($_[0]>1 && $_[1]>0 && $_[4] eq $_[7]) {
-    return $_[5] . $_[4] x ($_[0]+$_[1]-2) . $_[6];
+  $ascent = $_[0];
+  $descent = $_[1];
+
+  $base = $_[2];
+  $exp_one_side = $_[3];
+  $exp_real = $_[4];
+  $top = $_[5];
+  $bottom = $_[6];
+  $middle = $_[7];
+
+  if ($ascent>1 && $descent>0 && $exp_real eq $middle) {
+    return $top . $exp_real x ($ascent+$descent-2) . $bottom;
   }
+
   # No descent:
-  if ($_[1] <= 0) {return $_[3] x ($_[0]-1) . $_[2];}
+  if ($descent <= 0) {
+    return $exp_one_side x ($ascent-1) . $base;
+  }
+
   # No ascent:
-  if ($_[0] <= 1) {return $_[2] . $_[3] x $_[1];}
-  local($mid,$asc,$des)=($_[2]);
-  # descent == 1
-  $des = ($_[1]==1) ? $_[2]: $_[4] x ($_[1]-1) . $_[6];
-  $asc  = ($_[0]==2) ? $_[2]: $_[5] . $_[4] x ($_[0]-2);
-  $mid = $_[7] unless $_[0]==2 || $_[1]==1;
-  return "$asc$mid$des";
+  if ($ascent <= 1) {
+    return $base . $exp_one_side x $descent;
+  }
+
+  # 
+  $p1 = ($ascent >= 2) ? $top . $exp_real x ($ascent-2) : $top;
+  $p3 = ($descent > 1) ? $exp_real x ($descent-1) . $bottom : $bottom;
+
+  print $ascent . ", " . $descent . ", " . $base . "\n";
+
+  return $p1 . $middle . $p3;
 }
 
 sub arg2stack {push(@argStack,&get_balanced());}
@@ -1638,192 +1675,100 @@ sub par {&finishBuffer;&commit("1,5,0,0,     ")
 	   unless $par =~ s/^\s*\\noindent\s*(\s+|([^a-zA-Z\s])|$)/\2/;}
 
 $type{"\\sum"}="record";
-$contents{"\\sum"}="3,4,1,0," . <<'EOF';
-\~~
- >
-/__
+$contents{"\\sum"}="3,3,1,0," . <<'EOF';
+__ 
+❯  
+‾‾ 
 EOF
 
 $type{"\\int"}="record";
 $contents{"\\int"}="3,3,1,0," . <<'EOF';
- ,-
+ ╭ 
  |
--'
+ ╯ 
 EOF
 
 $type{"\\prod"}="record";
-$contents{"\\prod"}="3,3,1,0," . <<'EOF';
+$contents{"\\prod"}="2,3,1,0," . <<'EOF';
 ___
-| |
-| |
-EOF
-
-$type{"\\Pi"}="record";
-$contents{"\\Pi"}="2,3,1,0," . <<'EOF';
- _
-| |
+│ │
 EOF
 
 $type{"\\Sigma"}="record";
 $contents{"\\Sigma"}="3,2,1,0," . <<'EOF';
 __
->
-~~
+❯ 
+‾‾
 EOF
 
-$type{"\\Delta"}="record";
-$contents{"\\Delta"}="2,2,0,0," . <<'EOF';
-/\
-~~
-EOF
+$type{"\\oplus"}="string";
+$contents{"\\oplus"}="⊕";
 
-$type{"\\oplus"}="record";
-$contents{"\\oplus"}="3,5,1,0," . <<'EOF';
-  _
- (+)
-  ~
-EOF
+$type{"\\otimes"}="string";
+$contents{"\\otimes"}="⊗";
 
-$type{"\\otimes"}="record";
-$contents{"\\otimes"}="3,5,1,0," . <<'EOF';
-  _
- (x)
-  ~
-EOF
+$type{"\\ominus"}="string";
+$contents{"\\ominus"}="⊖";
 
-$type{"\\ominus"}="record";
-$contents{"\\ominus"}="3,5,1,0," . <<'EOF';
-  _
- (-)
-  ~
-EOF
+$type{"\\leq"}="string";
+$contents{"\\leq"}="≤";
 
-$type{"\\leq"}="record";
-$contents{"\\leq"}="2,4,1,0," . <<'EOF';
- _
- <
-EOF
+$type{"\\equiv"}="string";
+$contents{"\\equiv"}="≡";
 
-$type{"\\equiv"}="record";
-$contents{"\\equiv"}="2,4,1,0," . <<'EOF';
- _
- =
-EOF
+$type{"\\geq"}="string";
+$contents{"\\geq"}="≥";
 
-$type{"\\geq"}="record";
-$contents{"\\geq"}="2,4,1,0," . <<'EOF';
- _
- >
-EOF
+$type{"\\partial"}="string";
+$contents{"\\partial"}="∂";
 
-$type{"\\partial"}="record";
-$contents{"\\partial"}="2,2,1,0," . <<'EOF';
-\
-d
-EOF
+$type{"\\forall"}="string";
+$contents{"\\forall"}="∀";
 
-$type{"\\forall"}="record";
-$contents{"\\forall"}="3,4,1,0," . <<'EOF';
-\__/
- \/
-EOF
+$type{"\\exists"}="string";
+$contents{"\\exists"}="∃";
 
-$type{"\\exists"}="record";
-$contents{"\\exists"}="3,2,1,0," . <<'EOF';
-_.
--|
-~'
-EOF
+$type{"\\owns"}="string";
+$contents{"\\owns"}="∋";
 
-$type{"\\owns"}="record";
-$contents{"\\owns"}="3,4,1,0," . <<'EOF';
- _
- -)
- ~
-EOF
+$type{"\\ni"}="string";
+$contents{"\\ni"}="∌";
 
-$type{"\\ni"}="record";
-$contents{"\\ni"}="3,4,1,0," . <<'EOF';
- _
- -)
- ~
-EOF
+$type{"\\in"}="string";
+$contents{"\\in"}="∈";
 
-$type{"\\in"}="record";
-$contents{"\\in"}="3,4,1,0," . <<'EOF';
-  _
- (-
-  ~
-EOF
+$type{"\\notin"}="string";
+$contents{"\\notin"}="∉";
 
-$type{"\\notin"}="record";
-$contents{"\\notin"}="3,5,1,0," . <<'EOF';
-  |_
- (|-
-  |~
-EOF
+$type{"\\qed"}="string";
+$contents{"\\qed"}="∎";
 
-$type{"\\qed"}="record";
-$contents{"\\qed"}="2,6,1,0," . <<'EOF';
-    _
-   |_|
-EOF
+$type{"\\pm"}="string";
+$contents{"\\pm"}="±";
 
-$type{"\\pm"}="record";
-$contents{"\\pm"}="2,1,0,0," . <<'EOF';
-+
--
-EOF
+$type{"\\mp"}="string";
+$contents{"\\mp"}="∓";
 
-$type{"\\mp"}="record";
-$contents{"\\mp"}="2,1,1,0," . <<'EOF';
-_
-+
-EOF
+$type{"\\cong"}="string";
+$contents{"\\cong"}="≅";
 
-$type{"\\cong"}="record";
-$contents{"\\cong"}="2,1,0,0," . <<'EOF';
-=
-~
-EOF
+$type{"\\neq"}="string";
+$contents{"\\neq"}="≠";
 
-$type{"\\neq"}="record";
-$contents{"\\neq"}="1,5,0,0," . <<'EOF';
- =/=
-EOF
+$type{"\\nmid"}="string";
+$contents{"\\nmid"}="∤";
 
-$type{"\\nmid"}="record";
-$contents{"\\nmid"}="3,3,1,0," . <<'EOF';
- |/
- |
-/|
-EOF
+$type{"\\subset"}="string";
+$contents{"\\subset"}="⊂";
 
-$type{"\\subset"}="record";
-$contents{"\\subset"}="2,4,1,0," . <<'EOF';
-  _
- (_
-EOF
+$type{"\\subseteq"}="string";
+$contents{"\\subseteq"}="⊆";
 
-$type{"\\subseteq"}="record";
-$contents{"\\subseteq"}="3,4,1,0," . <<'EOF';
-  _
- (_
-  ~
-EOF
+$type{"\\supseteq"}="string";
+$contents{"\\subseteq"}="⊇";
 
-$type{"\\supseteq"}="record";
-$contents{"\\subseteq"}="3,4,1,0," . <<'EOF';
- _
- _)
- ~
-EOF
-
-$type{"\\supset"}="record";
-$contents{"\\supset"}="2,4,1,0," . <<'EOF';
- _
- _)
-EOF
+$type{"\\supset"}="string";
+$contents{"\\supset"}="⊃";
 
 $type{"\\sqrt"}="sub1";
 $contents{"\\sqrt"}="radical";
@@ -2044,10 +1989,10 @@ $type{"\\backslash"}="string";
 $contents{"\\backslash"}="\\";
 
 $type{"\\approx"}="string";
-$contents{"\\approx"}=" ~ ";
+$contents{"\\approx"}=" ≅ ";
 
 $type{"\\simeq"}="string";
-$contents{"\\simeq"}=" ~ ";
+$contents{"\\simeq"}=" ≃ ";
 
 $type{"\\quad"}="string";
 $contents{"\\quad"}="   ";
@@ -2055,11 +2000,17 @@ $contents{"\\quad"}="   ";
 $type{"\\qquad"}="string";
 $contents{"\\qquad"}="     ";
 
+$type{"\\Delta"}="string";
+$contents{"\\Delta"}="△";
+
+$type{"\\Pi"}="string";
+$contents{"\\Pi"}="π";
+
 $type{"\\to"}="string";
-$contents{"\\to"}=" --> ";
+$contents{"\\to"}=" ──> ";
 
 $type{"\\from"}="string";
-$contents{"\\from"}=" <-- ";
+$contents{"\\from"}=" <── ";
 
 $type{"\\wedge"}="string";
 $contents{"\\wedge"}="/\\";
@@ -2077,7 +2028,7 @@ $type{"\\rhd"}="string";
 $contents{"\\rhd"}=" |> ";
 
 $type{"\\cdot"}="string";
-$contents{"\\cdot"}=" . ";
+$contents{"\\cdot"}=" · ";
 
 # $type{"\dot"}="string";
 # $contents{"\\dot"}=" . ";
@@ -2173,11 +2124,13 @@ if ($opt_TeX) {
   &defb("pmatrix") unless $opt_TeX;
 }
 
-
-  ## All the records should be specified before this point
-  {local(@a)=grep("record" eq $type{$_},keys %type);
-		for (@a) {chop $contents{$_} if
-      substr($contents{$_},length($contents{$_})-1,1) eq "\n";}}
+## All the records should be specified before this point
+{
+  local(@a)=grep("record" eq $type{$_},keys %type);
+  for (@a) {
+    chop $contents{$_} if substr($contents{$_},length($contents{$_})-1,1) eq "\n";
+  }
+}
 
 for ("oplus","otimes","cup","wedge") {
   $type{"\\big$_"}=$type{"\\$_"};
