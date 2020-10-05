@@ -1,4 +1,4 @@
-# tex2utf
+# Tex2utf
 
 This repo is a UTF8 massaging of the `tex2mail` tool for converting LaTeX to plain text, hosten at https://ctan.org/pkg/tex2mail.
 
