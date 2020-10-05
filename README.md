@@ -1,6 +1,8 @@
 # Tex2utf
 
-This repo is a UTF8 massaging of the `tex2mail` tool (with some fixes around how brackets are constructed) for converting LaTeX to an easier to read plain text form, for use in contexts that don't support graphical rendering. The origincal can be found over on https://ctan.org/pkg/tex2mail.
+This repo is a UTF8 massaging of the `tex2mail` tool (with some fixes around how brackets are constructed) for converting LaTeX maths to an easier to read, plain text form (for use in contexts that don't support graphical rendering).
+
+The original can be found over on https://ctan.org/pkg/tex2mail.
 
 ## LaTeX
 
