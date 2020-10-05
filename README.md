@@ -1,8 +1,6 @@
 # Tex2utf
 
-This repo is a UTF8 massaging of the `tex2mail` tool for converting LaTeX to plain text, hosted at https://ctan.org/pkg/tex2mail.
-
-Have some screenshots that show off the different (note that these are images, because the font used for Github code blocks is almost certainly not a true monospace font).
+This repo is a UTF8 massaging of the `tex2mail` tool (with some fixes around how brackets are constructed) for converting LaTeX to an easier to read plain text form, for use in contexts that don't support graphical rendering. The origincal can be found over on https://ctan.org/pkg/tex2mail.
 
 ## LaTeX
 
