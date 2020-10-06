@@ -1542,8 +1542,8 @@ sub makehigh {
   #  5: mid
   if    ($str eq "(") {@c=split(":",'(: :│:╭:╰:│');}
   elsif ($str eq ")") {@c=split(":",'): :│:╮:╯:│');}
-  elsif ($str eq "{") {@c=split(":",'{: :|:╭:╰:╡');}
-  elsif ($str eq "}") {@c=split(":",'}: :|:╮:╯:╞');}
+  elsif ($str eq "{") {@c=split(":",'{: :│:╭:╰:╡');}
+  elsif ($str eq "}") {@c=split(":",'}: :│:╮:╯:╞');}
   elsif ($str eq "|" && $str eq "||")
                       {@c=split(":",'|:|:|:|:|:|');}
   elsif ($str eq "[") {@c=split(":",'[: :│:┌:└:│');}
@@ -1664,13 +1664,9 @@ sub makecompound {
     return $base . $exp_one_side x $descent;
   }
 
-  # 
-  $p1 = ($ascent >= 2) ? $top . $exp_real x ($ascent-2) : $top;
-  $p3 = ($descent > 1) ? $exp_real x ($descent-1) . $bottom : $bottom;
-
-  print $ascent . ", " . $descent . ", " . $base . "\n";
-
-  return $p1 . $middle . $p3;
+  $above = ($ascent >= 2) ? $top . $exp_real x ($ascent-2) : $top;
+  $below = ($descent > 1) ? $exp_real x ($descent-1) . $bottom : $bottom;
+  return $above . $middle . $below;
 }
 
 sub arg2stack {push(@argStack,&get_balanced());}
@@ -1704,6 +1700,9 @@ __
 ❯ 
 ‾‾
 EOF
+
+$type{"\\textit"}="string";
+$contents{"\\textit"}=" ";
 
 $type{"\\oplus"}="string";
 $contents{"\\oplus"}="⊕";
@@ -1975,7 +1974,7 @@ $type{"\\ldots"}="string";
 $contents{"\\ldots"}="...";
 
 $type{"\\cdots"}="string";
-$contents{"\\cdots"}="...";
+$contents{"\\cdots"}="⋯";
 
 $type{"\\colon"}="string";
 $contents{"\\colon"}=": ";
@@ -1984,10 +1983,10 @@ $type{"\\mid"}="string";
 $contents{"\\mid"}=" | ";
 
 $type{"\\smallsetminus"}="string";
-$contents{"\\smallsetminus"}=" \\ ";
+$contents{"\\smallsetminus"}=" ⧵ ";
 
 $type{"\\setminus"}="string";
-$contents{"\\setminus"}=" \\ ";
+$contents{"\\setminus"}=" ⧹ ";
 
 $type{"\\backslash"}="string";
 $contents{"\\backslash"}="\\";
@@ -2010,6 +2009,9 @@ $contents{"\\Delta"}="△";
 $type{"\\Pi"}="string";
 $contents{"\\Pi"}="π";
 
+$type{"\\alpha"}="string";
+$contents{"\\alpha"}="α";
+
 $type{"\\to"}="string";
 $contents{"\\to"}=" ──> ";
 
@@ -2017,73 +2019,70 @@ $type{"\\from"}="string";
 $contents{"\\from"}=" <── ";
 
 $type{"\\wedge"}="string";
-$contents{"\\wedge"}="/\\";
+$contents{"\\wedge"}="∧";
 
 $type{"\\Lambda"}="string";
-$contents{"\\Lambda"}="/\\";
+$contents{"\\Lambda"}="∨";
 
 $type{"\\ltimes"}="string";
-$contents{"\\ltimes"}=" |>< ";
+$contents{"\\ltimes"}="⋉";
 
 $type{"\\lhd"}="string";
-$contents{"\\lhd"}=" <| ";
+$contents{"\\lhd"}=" ⊲ ";
 
 $type{"\\rhd"}="string";
-$contents{"\\rhd"}=" |> ";
+$contents{"\\rhd"}=" ⊳ ";
 
 $type{"\\cdot"}="string";
 $contents{"\\cdot"}=" · ";
-
-# $type{"\dot"}="string";
-# $contents{"\\dot"}=" . ";
 
 $type{"\\circ"}="string";
 $contents{"\\circ"}=" o ";
 
 $type{"\\bullet"}="string";
-$contents{"\\bullet"}="\@";
+$contents{"\\bullet"}="•";
 
 $type{"\\infty"}="string";
-$contents{"\\infty"}="oo";
+$contents{"\\infty"}="∞";
 
 $type{"\\rtimes"}="string";
-$contents{"\\rtimes"}=" ><| ";
+$contents{"\\rtimes"}=" ⋊ ";
 
 $type{"\\times"}="string";
-$contents{"\\times"}=" >< ";
+$contents{"\\times"}=" × ";
 
 $type{"\\hookrightarrow"}="string";
-$contents{"\\hookrightarrow"}=" c--> ";
+$contents{"\\hookrightarrow"}=" ↪ ";
 
 $type{"\\hookleftarrow"}="string";
-$contents{"\\hookleftarrow"}=" <--j ";
+$contents{"\\hookleftarrow"}=" ↩ ";
 
 $type{"\\longleftarrow"}="string";
-$contents{"\\longleftarrow"}=" <----- ";
+$contents{"\\longleftarrow"}=" <──── ";
 
 $type{"\\longleftrightarrow"}="string";
-$contents{"\\longleftrightarrow"}=" <----> ";
+$contents{"\\longleftrightarrow"}=" <────> ";
 
 $type{"\\longrightarrow"}="string";
-$contents{"\\longrightarrow"}=" -----> ";
+$contents{"\\longrightarrow"}=" ────> ";
 
 $type{"\\rightarrow"}="string";
-$contents{"\\rightarrow"}=" ---> ";
+$contents{"\\rightarrow"}=" ──> ";
 
 $type{"\\leftarrow"}="string";
-$contents{"\\leftarrow"}=" <--- ";
+$contents{"\\leftarrow"}=" <── ";
 
 $type{"\\mapsto"}="string";
-$contents{"\\mapsto"}=" |--> ";
+$contents{"\\mapsto"}=" ├──> ";
 
 $type{"\\longmapsto"}="string";
-$contents{"\\longmapsto"}=" |----> ";
+$contents{"\\longmapsto"}=" ├────> ";
 
 $type{"\\cap"}="string";
-$contents{"\\cap"}=" /~\\ ";
+$contents{"\\cap"}=" ∩ ";
 
 $type{"\\cup"}="string";
-$contents{"\\cup"}=" \\_/ ";
+$contents{"\\cup"}=" ∪ ";
 
 $type{"\\section"}="string";
 $contents{"\\section"}="Section ";
