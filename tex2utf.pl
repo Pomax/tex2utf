@@ -37,7 +37,7 @@ BEGIN {
 
 use utf8;
 
-eval 'require "./newgetopt.pl"; &NGetOpt("linelength=i","maxdef=i","debug=i","by_par", "TeX", "ragged", "noindent")' || warn "Errors during parsing command line options" . ($@ ? ": $@" : '') . ".\n";
+eval 'require "$dirname/newgetopt.pl"; &NGetOpt("linelength=i","maxdef=i","debug=i","by_par", "TeX", "ragged", "noindent")' || warn "Errors during parsing command line options" . ($@ ? ": $@" : '') . ".\n";
 
 $linelength= $opt_linelength || 150;
 $maxdef= $opt_maxdef || 400;
