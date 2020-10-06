@@ -1,8 +1,14 @@
 #!/usr/local/bin/perl
 
 # UTF8-massaged version of https://ctan.org/pkg/tex2mail
-# Updated October 2020, original header follows.
-# ---
+# Due to `use utf8;` you will need to set your stdio/stdout
+# encoding to utf8, or you'll almost certainly going to be
+# getting "Wide character in print at" errors because your
+# terminal emulator is trying to parse multi-byte unicode
+# characters as if they're single byte characters...
+#
+# Updated October 2020 by pomax@nihongoressources.com,
+# original header immediately followsthis comment block. 
 
 # $Id: tex2mail.in,v 1.1 2000/10/27 19:13:53 karim Exp $
 #
@@ -22,6 +28,12 @@
 #	TeX			# Assume it is not LaTeX
 #	ragged			# leave right ragged
 #	noindent		# assume \noindent everywhere
+
+BEGIN {
+   use File::Spec;
+   use File::Basename;
+   $dirname = dirname(File::Spec->rel2abs( __FILE__ ));
+}
 
 use utf8;
 
