@@ -55,3 +55,7 @@ Let's compare the result for the following (nonsense) LaTeX code:
 I'd honestly love to get this turned into a Python script, because Perl programmers are a dying breed (I haven't worked with Perl in 20 years, so I spent way more time than I would have liked relearning how everything works) and having functions with actual named parameters is kind of nice if you want folks to understand what's going on and possibly help improve the code.
 
 That said, if you feel this is something that can (finally) do what you need, and it's doing something wrong, and you know how to fix it (or you know where it's going wrong even if you don't know exactly how to fix it): file an issue, or even a PR, and let's get this tool updated to modern standards!
+
+## Tests
+
+There are no tests right now, but there probably should be. Got an idea? Write your thoughts in an issue!

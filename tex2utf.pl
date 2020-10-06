@@ -1,14 +1,10 @@
 #!/usr/local/bin/perl
 
 # UTF8-massaged version of https://ctan.org/pkg/tex2mail
-# Due to `use utf8;` you will need to set your stdio/stdout
-# encoding to utf8, or you'll almost certainly going to be
-# getting "Wide character in print at" errors because your
-# terminal emulator is trying to parse multi-byte unicode
-# characters as if they're single byte characters...
 #
 # Updated October 2020 by pomax@nihongoressources.com,
-# original header immediately followsthis comment block. 
+# original header immediately followsthis comment block,
+# with spacing updated to something that looks uniform. 
 
 # $Id: tex2mail.in,v 1.1 2000/10/27 19:13:53 karim Exp $
 #
@@ -19,23 +15,28 @@
 # Change log is at bottom.
 #
 # Options:
-#	linelength=75		# Cut at this line
-#	maxdef=400		# definition loops: croak if many substitutions
-#	debug=0
-#	by_par=0		# Expect each paragraph to be terminated
-#				# by *exactly* 2 "\n", and do not print
-#				# an extra "\n" between paragraphs
-#	TeX			# Assume it is not LaTeX
-#	ragged			# leave right ragged
-#	noindent		# assume \noindent everywhere
+#  linelength=75 # Cut at this line
+#  maxdef=400    # definition loops: croak if many substitutions
+#  debug=0
+#  by_par=0      # Expect each paragraph to be terminated
+#                # by *exactly* 2 "\n", and do not print
+#                # an extra "\n" between paragraphs
+#  TeX           # Assume it is not LaTeX
+#  ragged        # leave right ragged
+#  noindent      # assume \noindent everywhere
+
+use utf8;
+
+if ($^O eq 'MSWin32') {
+  use Win32 qw( );
+  use open ':std', ':encoding(cp'.Win32::GetConsoleOutputCP().')';
+}
 
 BEGIN {
    use File::Spec;
    use File::Basename;
    $dirname = dirname(File::Spec->rel2abs( __FILE__ ));
 }
-
-use utf8;
 
 eval 'require "$dirname/newgetopt.pl"; &NGetOpt("linelength=i","maxdef=i","debug=i","by_par", "TeX", "ragged", "noindent")' || warn "Errors during parsing command line options" . ($@ ? ": $@" : '') . ".\n";
 
