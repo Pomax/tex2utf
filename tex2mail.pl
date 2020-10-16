@@ -19,7 +19,7 @@
 #	ragged			# leave right ragged
 #	noindent		# assume \noindent everywhere
 
-eval 'require "newgetopt.pl";
+eval 'require "./newgetopt.pl";
   &NGetOpt("linelength=i","maxdef=i","debug=i","by_par", "TeX",
 	   "ragged", "noindent")'
     || warn "Errors during parsing command line options" .
