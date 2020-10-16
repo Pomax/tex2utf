@@ -6,13 +6,15 @@ The original can be found over on https://ctan.org/pkg/tex2mail.
 
 ## Usage
 
-Place both `tex2utf.pl` and `newgetopts.pl` in a dir somewhere, then invoke using perl as:
+Place `tex2utf.pl` in a dir somewhere then invoke using perl as:
 
 ```
 > perl path/to/tex2utf.pl inputfile.tex
 ```
 
-**Note:** because this is an update to tex2mail to support UTF8, your terminal environment must be set to utf8 encoding. If not, you're basically guaranteed to get `Wide character in print at ...` errors.
+**Note:** because this is an update to tex2mail to support UTF8, your environment should be set to utf8 encoding. If not, you're basically guaranteed to get `Wide character in print at ...` errors.
+
+**Note 2:** the `newgetopt.pl` file is not required, it only came with `tex2mail.pl` for perl4 support. Perl 5 added Getopt::Long for runtime arg parsing, and `tex2utf` does not care about perl 4 in the slightest.
 
 
 ## LaTeX

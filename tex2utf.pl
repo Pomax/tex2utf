@@ -1,9 +1,11 @@
 #!/usr/local/bin/perl
 
+# $Id: tex2utf.pl, v 1.0 2020/10/16 16:09:00 Pomax $
+#
 # UTF8-massaged version of https://ctan.org/pkg/tex2mail
 #
 # Updated October 2020 by pomax@nihongoressources.com,
-# original header immediately followsthis comment block,
+# original header immediately follows this comment block,
 # with spacing updated to something that looks uniform. 
 
 # $Id: tex2mail.in,v 1.1 2000/10/27 19:13:53 karim Exp $
@@ -25,6 +27,31 @@
 #  ragged        # leave right ragged
 #  noindent      # assume \noindent everywhere
 
+use Getopt::Long;
+
+$linelength = 150;
+$maxdef = 400;
+$debug = false;
+$opt_by_par = false;
+$opt_TeX = true;
+$opt_ragged = false;
+$opt_noindent = false;
+
+GetOptions(
+  "linelength=s" => \$linelength,
+  "maxdef=s" => \$maxdef,
+  "debug" => \$debug,
+  "by_par" => \$opt_by_par,
+  "TeX" => \$opt_TeX,
+  "ragged" => \$opt_ragged,
+  "noindent" => \$opt_noindent
+) or die "Could not parse provided runtime flag(s)";
+
+#
+# This part is a little different: enable utf8 and ensure that
+# even on Windows, the input/output is fully unicode conformant:
+#
+
 use utf8;
 
 if ($^O eq 'MSWin32') {
@@ -38,11 +65,10 @@ BEGIN {
    $dirname = dirname(File::Spec->rel2abs( __FILE__ ));
 }
 
-eval 'require "$dirname/newgetopt.pl"; &NGetOpt("linelength=i","maxdef=i","debug=i","by_par", "TeX", "ragged", "noindent")' || warn "Errors during parsing command line options" . ($@ ? ": $@" : '') . ".\n";
+#
+# The original code then continues here...
+#
 
-$linelength= $opt_linelength || 150;
-$maxdef= $opt_maxdef || 400;
-$debug=$opt_debug;
 $notusualtoks="\\\\" . '\${}^_~&@';
 $notusualtokenclass="[$notusualtoks]";
 $usualtokenclass="[^$notusualtoks]";
@@ -50,7 +76,6 @@ $macro='\\\\([^a-zA-Z]|([a-zA-Z]+\s*))'; # Why \\\\? double interpretation!
 $active="$macro|\\\$\\\$|$notusualtokenclass";
 $tokenpattern="$usualtokenclass|$active";
 $multitokenpattern="$usualtokenclass+|$active";
-
 
 # Format of the record: height,length,baseline,expandable-spaces,string
 # The string is not terminated by \n, but separated into rows by \n.
