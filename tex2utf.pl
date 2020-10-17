@@ -1605,7 +1605,11 @@ sub makehigh {
     return;
   }
   else {return;}
-  $_[0]=&vputs(&makecompound($b,$d,@c),$b-1);
+  
+  # form initial typesetting
+  $_[0]=&vputs(&makecompound($b,$d,@c), $b-1);
+
+  # pad out the shape with spaces
   $_[0]=&join($_[0],$_[0]) if length($str)==2;
   $_[0]=&join(&string2record(" " x $_[3]),$_[0]) if $_[3];
   $_[0]=&join($_[0],&string2record(" " x $_[4])) if $_[4];
@@ -1688,22 +1692,34 @@ sub makecompound {
   $bottom = $_[6];
   $middle = $_[7];
 
-  if ($ascent>1 && $descent>0 && $exp_real eq $middle) {
-    return $top . $exp_real x ($ascent+$descent-2) . $bottom;
+  # Note that this will go wrong for:
+  #
+  #    =
+  #  \begin{bmatrix}
+  #    1 & (z \cdot t) & (z \cdot t)^2
+  #  \end{bmatrix}
+  #
+  # where it places the resulting ascii a line too low,
+  # and I don't know why...
+  #
+  # - Pomax
+
+  if ($ascent >= 1 && $descent > 0 && $exp_real eq $middle) {
+    return $top . $exp_real x ($ascent + $descent - 2) . $bottom;
   }
 
   # No descent:
   if ($descent <= 0) {
-    return $exp_one_side x ($ascent-1) . $base;
+    return $exp_one_side x ($ascent - 1) . $base;
   }
 
   # No ascent:
   if ($ascent <= 1) {
-    return $base . $exp_one_side x $descent;
+    return $base . $exp_one_side x ($descent - 0);
   }
 
-  $above = ($ascent >= 2) ? $top . $exp_real x ($ascent-2) : $top;
-  $below = ($descent > 1) ? $exp_real x ($descent-1) . $bottom : $bottom;
+  $above = ($ascent >= 2) ? $top . $exp_real x ($ascent - 2) : $top;
+  $below = ($descent > 1) ? $exp_real x ($descent - 1) . $bottom : $bottom;
   return $above . $middle . $below;
 }
 
