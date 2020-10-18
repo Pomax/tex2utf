@@ -16,7 +16,7 @@ Place `tex2utf.pl` in a dir somewhere then invoke using perl as:
 
 **Note:** because this is an update to tex2mail to support UTF8, your environment should be set to utf8 encoding. If not, you're basically guaranteed to get `Wide character in print at ...` errors.
 
-**Note 2:** the `newgetopt.pl` file is not required, it only came with `tex2mail.pl` for perl4 support. Perl 5 added Getopt::Long for runtime arg parsing, and `tex2utf` does not care about perl 4 in the slightest.
+**Note 2:** the `newgetopt.pl` file that the original `tex2mail.pl` relies on is not required. The original needed it for perl 4 compatibility, but that's not been necessary for some 25 years now.
 
 
 ## LaTeX
@@ -25,6 +25,11 @@ Let's compare the result for the following (nonsense) LaTeX code:
 
 ```
 \[
+    B(t) =
+    \begin{bmatrix}
+      1 & (z \cdot t) & (z \cdot t)^2
+    \end{bmatrix}
+    =
     \prod_{i=0}^n
     \Delta
     \int_{0}^{z}\sqrt{ \left (dx/dt \right )^2+\left (dy/dt \right )^2} dt
