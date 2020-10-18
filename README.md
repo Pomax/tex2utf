@@ -62,8 +62,10 @@ That said, if you feel this is something that can (finally) do what you need, an
 
 ## How does this script work?
 
-No idea, it's been 20 years since I wrote Perl, and there are _tons_ of things wrong in this script if you turn on `use warnings` some of which require a deep understanding of the architecture underpinning the script's functioning. I'd have to perform code archeology to tease it apart, and unless someone wants to fund that effort, that is not something I'm going to be able to justify dedicating time to. If you are a Perl5 and Python3 expert, and you want to help, let me know.
+Kind of like TeX itself, really. It starts in the `paragraph` sub, and then run itself over and over until there's nothing left to expand/typset.
+
+That said, it's been over 20 years since I last used Perl, and there are quite a few things that are "wrong" in this script that are revealed by adding `use warnings`... some of which require a deep understanding of the architecture underpinning the script's functioning. I'd have to perform code archeology to tease it apart, and unless someone wants to fund that effort, that is not something I'm going to be able to justify dedicating time to. At least not beyond trying to fix things that I _ned_ fixed for my own project(s). If you are a Perl 5 and Python 3 expert, and you want to help, please do let me know.
 
 ## Tests
 
-There are no tests right now, but there probably should be. Got an idea? Write your thoughts in an issue!
+There are no real tests right now, only some use-cases for some of the things I ran into while using tex2utf on my own content. Being able to turn those into unit tests would be pretty sweet though... got any ideas? Write your thoughts in an issue!
