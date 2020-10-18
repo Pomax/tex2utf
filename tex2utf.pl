@@ -54,15 +54,12 @@ GetOptions(
 
 use utf8;
 
-if ($^O eq 'MSWin32') {
-  use Win32 qw( );
-  use open ':std', ':encoding(cp'.Win32::GetConsoleOutputCP().')';
-}
-
+use open ':std', ':encoding(UTF-8)';
 BEGIN {
-   use File::Spec;
-   use File::Basename;
-   $dirname = dirname(File::Spec->rel2abs( __FILE__ ));
+  if ($^O eq "MSWin32") {
+    require Win32::Unicode::File;
+    Win32::Unicode::File->import();
+  }
 }
 
 #
@@ -520,14 +517,14 @@ sub finish_ignore {
 sub start {
   warn "Beginning with $_[0], $_[1]\n" if $debug & $debug_flow;
   warn "B:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
-  if ($chunks[$level[$#level]]<=$#out && $chunks[$#chunks]<=$#out) {
+  if ($chunks[$level[$#level]] <= $#out && $chunks[$#chunks] <= $#out) {
     # the last level is non empty
-    push(@chunks,$#out+1);
+    push(@chunks, $#out + 1);
   }
-  push(@level,$#chunks);
-  push(@tokenByToken,0);
-  $wait[$#level]=shift;
-  if ($#_<0) {$action[$#level]="";} else {$action[$#level]=shift;}
+  push(@level, $#chunks);
+  push(@tokenByToken, 0);
+  $wait[$#level] = shift;
+  if ($#_<0) { $action[$#level] = ""; } else { $action[$#level] = shift; }
   warn "a:Last $#chunks, the first on the last level=$#level is $level[$#level]" if $debug & $debug_flow;
 }
 
@@ -591,13 +588,11 @@ sub empty {
 }
 
 # Commits a record with a sum symbol
-
 sub sum {
-  &commit("4,3,2,0," . <<'EOF');
-___
-\
- >
-/__
+  &commit("3,2,1,0," . <<'EOF');
+__
+❯ 
+‾‾
 EOF
 }
 
@@ -621,7 +616,9 @@ sub record_forcelength {
 }
 
 sub finishBuffer {
-  while ($#level>0) {&finish("");}
+  while ($#level > 0) {
+    &finish("");
+  }
   &print(1);
 }
 
@@ -892,8 +889,13 @@ sub puts {
   &commit(&string2record);
 }
 
-# digests an eaten paragraph
-
+# ===========================================
+#
+#   Main script entry point: this function
+#  runs over and over until there is nothing
+#         left for it to process.
+#
+# ===========================================
 sub paragraph {
   local($par);
   $par=<>;
@@ -972,11 +974,11 @@ sub paragraph {
       }
     }
   }
-  warn "Unrecognized part of input `$par',\n\ttoken-by-token[$#level]=$tokenByToken[$#level]"
-    if $par ne "";
-  &finishBuffer if $#out>=0;
-# return 0 if eof();
-  1;
+  warn "Unrecognized part of input `$par',\n\ttoken-by-token[$#level]=$tokenByToken[$#level]" if $par ne "";
+
+  &finishBuffer if $#out >= 0;
+  
+  1; # return 0 if eof();
 }
 
 sub subscript {
@@ -1240,6 +1242,9 @@ sub trim {
   for ($#chunks-$_[0]+1..$#chunks) {&trim_one($_);}
 }
 
+# ==========================
+# Start of inline mode maths
+# ==========================
 sub dollar {
   if ($wait[$#level] eq '$') {        # ';
     &trim_end($out[$#out]);
@@ -1251,6 +1256,9 @@ sub dollar {
   }
 }
 
+# ==========================
+# Start of block mode maths
+# ==========================
 sub ddollar {
   if ($wait[$#level] eq '$$') {
     &trim_end($out[$#out]);
@@ -1884,10 +1892,10 @@ $type{"&"}="sub";
 $contents{"&"}="ampersand";
 
 $type{'$'}="sub";
-$contents{'$'}="dollar";
+$contents{'$'}="dollar"; # START OF INLINE PARSING
 
 $type{'$$'}="sub";
-$contents{'$$'}="ddollar";
+$contents{'$$'}="ddollar"; # START OF BLOCK PARSING
 
 $type{'\\\\'}="sub";
 $contents{'\\\\'}="bbackslash";
@@ -2163,16 +2171,21 @@ $contents{'\noindent'}="";
 &define('\\subheading','\\par\\underline');
 &define('\\(','$');
 &define('\\)','$');
+
+# Interestingly, since this script was written, LaTeX went
+# the opposite direction: rather than the $$ syntax, folks
+# are supposed to use \[ and \]
 &define('\\[','$$');
 &define('\\]','$$');
+
 &define('\\centerline#1','$$#1$$');
 &define('\\eqalign#1','\\aligned #1 \\endaligned');
 &define('\\cr','\\\\');
 &define('\\sb','_');
 &define('\\sp','^');
 &define('\\proclaim','\\noindent ');
-&defb("matrix","vmatrix","Vmatrix","smallmatrix","bmatrix","Sp","Sb",
-      "CD","align","aligned","split","multiline","gather","gathered");
+
+&defb("matrix","vmatrix","Vmatrix","smallmatrix","bmatrix","Sp","Sb","CD","align","aligned","split","multiline","gather","gathered");
 
 if ($opt_TeX) {
   &define('\pmatrix#1','\left(\begin{matrix}#1\end{matrix}\right)');
@@ -2205,6 +2218,7 @@ $debug_record=2;
 $debug_parsing=4;
 $debug_length=8;
 $debug_matrix=16;
+
 #$debug |= $debug_flow | $debug_record | $debug_parsing | $debug_length;
 #$debug |= $debug_flow;
 #$debug |= $debug_record;
@@ -2213,8 +2227,15 @@ $debug_matrix=16;
 #$debug |= $debug_matrix;
 
 
+# =============================
+#   Run the script by looping
+# paragraph parsing until there
+#   is nothing left to parse.
+# =============================
+
+
 $/ = $opt_by_par ? "\n\n" : ''; # whole paragraph mode
-while (&paragraph()) { 1 }
+while (&paragraph()) { }
 &finishBuffer;
 
 __END__
