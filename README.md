@@ -69,7 +69,7 @@ That said, if you feel this is something that can (finally) do what you need, an
 
 Kind of like TeX itself, really. It starts in the `paragraph` sub, and then run itself over and over until there's nothing left to expand/typset.
 
-That said, it's been over 20 years since I last used Perl, and there are quite a few things that are "wrong" in this script that are revealed by adding `use warnings`... some of which require a deep understanding of the architecture underpinning the script's functioning. I'd have to perform code archeology to tease it apart, and unless someone wants to fund that effort, that is not something I'm going to be able to justify dedicating time to. At least not beyond trying to fix things that I _ned_ fixed for my own project(s). If you are a Perl 5 and Python 3 expert, and you want to help, please do let me know.
+That said, it's been over 20 years since I last used Perl, and there are quite a few things that are "wrong" in this script that are revealed by adding `use warnings`... some of which require a deep understanding of the architecture underpinning the script's functioning. I'd have to perform code archeology to tease it apart, and unless someone wants to fund that effort, that is not something I'm going to be able to justify dedicating time to. At least not beyond trying to fix things that I need fixed for my own project(s). If you are a Perl 5 and Python 3 expert, and you want to help, please do let me know.
 
 ## Tests
 
