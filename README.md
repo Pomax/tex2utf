@@ -11,7 +11,7 @@ The original can be found over on https://ctan.org/pkg/tex2mail.
 Place `tex2utf.pl` in a dir somewhere, then invoke it using perl as:
 
 ```
-> perl path/to/tex2utf.pl inputfile.tex
+perl path/to/tex2utf.pl inputfile.tex
 ```
 
 **Note:** because this is an update to tex2mail to support UTF8, your environment should be set to utf8 encoding. If not, you're basically guaranteed to get `Wide character in print at ...` errors.
