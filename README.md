@@ -8,7 +8,7 @@ The original can be found over on https://ctan.org/pkg/tex2mail.
 
 ## Usage
 
-Place `tex2utf.pl` in a dir somewhere then invoke using perl as:
+Place `tex2utf.pl` in a dir somewhere, then invoke it using perl as:
 
 ```
 > perl path/to/tex2utf.pl inputfile.tex
