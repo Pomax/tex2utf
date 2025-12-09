@@ -65,7 +65,7 @@ sub finish {
   warn
       "a:Last $#chunks, the first on the last level=$#level is $level[$#level]"
            if $debug & $debug_flow;
-  if ($wait[$#level] == $#chunks-$level[$#level]+1) {
+  if (defined $wait[$#level] && $wait[$#level] =~ /^\d+$/ && $wait[$#level] == $#chunks-$level[$#level]+1) {
     local($sub)=($action[$#level]);
     if ($sub eq "") {&finish($wait[$#level]);}
     else {

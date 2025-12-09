@@ -65,6 +65,7 @@ sub halign {
       ($h,$le,$b)=
                 ($out[$chunks[$r+$level[$#level]]+$c] =~ /(\d+),(\d+),(\d+)/);
         # Format is Height:Length:Baseline
+      $w[$c] = 0 unless defined $w[$c];
       $w[$c]=$le unless $w[$c]>$le;
     }
   }

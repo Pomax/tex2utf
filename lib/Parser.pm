@@ -3,7 +3,7 @@ package Parser;
 use strict;
 use warnings;
 no strict 'vars';  # Allow old-style local variables
-no strict 'refs';  # Allow symbolic references
+no strict 'refs';  # Allow symbolic references for function calls
 use utf8;
 use Tex2UtfConfig;
 use Records;
@@ -35,20 +35,20 @@ sub paragraph {
   return 1 unless $par =~ /\S/; # whitespace only
 
   # TEX2UTF Edit: remove everything before "\begin{document}"
-  $par =~ s/^[\w\W]*(\\begin{document})/\1/g;
+  $par =~ s/^[\w\W]*(\\begin\{document\})/$1/g;
 
   print "\n" if $secondtime++ && !$opt_by_par;
-  $par =~ s/((^|[^\\])(\\\\)*)(%.*\n[ \t]*)+/\1/g;
+  $par =~ s/((^|[^\\])(\\\\)*)(%.*\n[ \t]*)+/$1/g;
   $par =~ s/\n\s*\n/\\par /g;
   $par =~ s/\s+/ /g;
   $par =~ s/\s+$//;
-  $par =~ s/(\$\$)\s+/\1/g;
+  $par =~ s/(\$\$)\s+/$1/g;
   $par =~ s/\\par\s*$//;
 
   local($defcount,$piece,$pure,$type,$sub,@t,$arg)=(0);
 
   &commit("1,5,0,0,     ")
-    unless $opt_noindent || ($par =~ s/^\s*\\noindent\s*([^a-zA-Z\s]|$)/\1/);
+    unless $opt_noindent || ($par =~ s/^\s*\\noindent\s*([^a-zA-Z\s]|$)/$1/);
   while ($tokenByToken[$#level] ?
       ($par =~ s/^\s*($tokenpattern)//o): ($par =~ s/^($multitokenpattern)//o)) {
     warn "tokenByToken=$tokenByToken[$#level], eaten=`$1'\n"
@@ -97,7 +97,7 @@ sub paragraph {
           &puts($pure . ($pure =~ /^\\[a-zA-Z]/ ? " ": ""));
           &finishBuffer;
           &commit("1,5,0,0,     ")
-          unless $par =~ s/^\s*\\noindent(\s+|([^a-zA-Z\s])|$)/\2/;
+          unless $par =~ s/^\s*\\noindent(\s+|([^a-zA-Z\s])|$)/$2/;
         } elsif ($type eq "string") {
           &puts($MacroExpansion::contents{$pure},1);
         } elsif ($type eq "nothing") {
@@ -144,7 +144,7 @@ sub dollar {
 # Start of block mode maths
 # ==========================
 sub ddollar {
-  if ($wait[$#level] eq '$$') {
+  if (defined $wait[$#level] && $wait[$#level] eq '$$') {
     trim_end($out[$#out]);
     LevelManager::finish('$$');
     return unless $#out>=0;
@@ -311,7 +311,7 @@ sub puts {
 sub par {
   &finishBuffer;
   &commit("1,5,0,0,     ")
-    unless $par =~ s/^\s*\\noindent\s*(\s+|([^a-zA-Z\s])|$)/\2/;
+    unless $par =~ s/^\s*\\noindent\s*(\s+|([^a-zA-Z\s])|$)/$2/;
 }
 
 1;

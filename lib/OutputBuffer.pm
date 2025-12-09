@@ -216,7 +216,7 @@ sub commit {
   if ($#out!=$chunks[$#chunks]) {push(@chunks,$#out);}
   warn "a:Last chunk number $#chunks, last record $#out, the first chunk\n" if $debug & $debug_flow;
   warn " on the last level=$#level is $level[$#level], waiting for $wait[$#level]\n" if $debug & $debug_flow;
-  if ($#level && $wait[$#level] == $#chunks-$level[$#level]+1) {
+  if ($#level && defined $wait[$#level] && $wait[$#level] =~ /^\d+$/ && $wait[$#level] == $#chunks-$level[$#level]+1) {
     local($sub,$arg)=($action[$#level]);
     if ($sub eq "") {
       require LevelManager;

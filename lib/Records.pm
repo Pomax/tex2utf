@@ -91,7 +91,9 @@ sub join_records {
     warn "`$str2', need $h2 rows\n";
   }
   for (0..$h2-1) {
-    $str[$b-$b2+$_] .= " " x ($l1 - length ($str[$b-$b2+$_])) . $str2[$_];
+    my $idx = $b-$b2+$_;
+    $str[$idx] = '' unless defined $str[$idx];
+    $str[$idx] .= " " x ($l1 - length ($str[$idx])) . $str2[$_];
   }
   return "$h,$l,$b,$sp," . join("\n",@str);
 }
@@ -116,7 +118,7 @@ sub get_height {
 
 sub setbaseline {
   (warn("Wrong format of a record `$_[0]'"), return undef)
-      unless $_[0] =~ s/^(\d+,\d+,)(\d+)/\1$_[1]/;
+      unless $_[0] =~ s/^(\d+,\d+,)(\d+)/$1$_[1]/;
 }
 
 # Return an empty record
