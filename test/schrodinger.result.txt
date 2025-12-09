@@ -1,0 +1,4 @@
+                                                               ┌       2                        ┐
+                                          ∂                    │  \hbar       2                 │
+                                    i\hbar──\Psi(\mathbfr,t) = │ -──────\nabla  + V(\mathbfr,t) │\Psi(\mathbfr,t)
+                                          ∂t                   └    2m                          ┘

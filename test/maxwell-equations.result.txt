@@ -1,0 +1,7 @@
+                                                                 \rho                             ∂\mathbfB
+                                          \nabla  · \mathbfE = ─────────    \nabla  × \mathbfE = -─────────
+                                                               \epsilon                              ∂t
+                                                                       0
+                                                                                                            ∂\mathbfE
+                                 \nabla  · \mathbfB = 0    \nabla  × \mathbfB = \mu \mathbfJ + \mu \epsilon ─────────
+                                                                                   0              0        0   ∂t

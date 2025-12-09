@@ -1,0 +1,4 @@
+                                                              1                      8\pi G
+                                                    R       - ─g      R + ∨g       = ──────T      
+                                                     \mu\nu   2 \mu\nu      \mu\nu      4   \mu\nu
+                                                                                       c 
