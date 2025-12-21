@@ -7,7 +7,6 @@ Converted to Python 3 from Perl
 import sys
 import re
 import argparse
-import unicodedata
 from typing import List, Optional, Dict, Any
 
 # Configuration
@@ -83,29 +82,7 @@ def printrecord(rec: str):
     lines = s.split("\n")
     for i, line in enumerate(lines[:6]):
         debug_log(f"  line {i} (len={len(line)}): '{line}'")
-
-    # Trim trailing whitespace from each line
-    lines = [line.rstrip() for line in lines if line.rstrip() != ""]
-
-    # Guard against empty result
-    if not lines:
-        return
-
-    # Find minimum leading whitespace across all non-empty lines
-    min_indent = None
-    for line in lines:
-        if line:  # Only consider non-empty lines
-            leading = len(line) - len(line.lstrip())
-            if min_indent is None or leading < min_indent:
-                min_indent = leading
-
-    # Remove common leading whitespace from all lines
-    if min_indent and min_indent > 0:
-        lines = [
-            line[min_indent:] if len(line) >= min_indent else line for line in lines
-        ]
-
-    print("\n".join(lines))
+    print(s)
 
 
 def extend_angle_bracket(
@@ -882,7 +859,7 @@ def sup_sub(p1_off: int, p2_off: int):
     h1, l1 = int(parts1[0]) or 1, int(parts1[1])
     h2, l2 = int(parts2[0]) or 1, int(parts2[1])
     str1 = parts1[4] if len(parts1) > 4 else ""
-    str2 = parts2[4] if len(parts2) or 4 else ""
+    str2 = parts2[4] if len(parts2) > 4 else ""
     if l1 == 0 and l2 == 0:
         finish(2, True)
         return
@@ -898,27 +875,11 @@ def sup_sub(p1_off: int, p2_off: int):
     else:
         h = h1 + h2 + 1
         out[-1] = f"{h},{l},{h1},0,{str1}\n\n{str2}"
-
-    # Add trailing space only when there's a subscript (l2 != 0)
-    # This handles \sum_{...}^{...} and \lim_{...} but not ^n alone
-    # Also check shallow nesting (len(level) <= 3)
-    parts = out[-1].split(",", 4)
-    result_h = int(parts[0]) or 1
-    if result_h > 1 and l2 != 0 and len(level) <= 3:
-        result_l = int(parts[1])
-        result_b = int(parts[2])
-        content = parts[4] if len(parts) > 4 else ""
-        lines = content.split("\n") if content else [""] * result_h
-        while len(lines) < result_h:
-            lines.append("")
-        lines = [line.ljust(result_l) + " " for line in lines]
-        out[-1] = f"{result_h},{result_l+1},{result_b},0," + "\n".join(lines)
-
     finish(2, True)
 
 
 def f_fraction():
-    global out, chunks, par
+    global out, chunks
     debug_log(f"f_fraction called")
     trim(2)
     collapse(2)
@@ -938,57 +899,6 @@ def f_fraction():
     numer_h = get_height(numer_centered)
     result = setbaseline(result, numer_h)
     debug_log(f"f_fraction: result={result}")
-
-    # Add leading space before the fraction if preceded by content
-    frac_group_start = chunks[level[-1]] if level else 0
-    check_idx = frac_group_start - 1
-    debug_log(
-        f"f_fraction: frac_group_start={frac_group_start}, check_idx={check_idx}, len(out)={len(out)}"
-    )
-
-    if check_idx >= 0 and check_idx < len(out):
-        prev_parts = out[check_idx].split(",", 4)
-        prev_s = prev_parts[4] if len(prev_parts) > 4 else ""
-        prev_l = int(prev_parts[1]) if len(prev_parts) > 1 and prev_parts[1] else 0
-        debug_log(f"f_fraction: prev_s='{prev_s}', prev_l={prev_l}")
-        if prev_l > 0 and prev_s:
-            # Don't add space if previous ends with space (e.g., from \cdot " · ")
-            if not prev_s.endswith(" "):
-                last_char = prev_s.rstrip()[-1:] if prev_s.rstrip() else ""
-                if last_char and last_char not in "+-=(<[{":
-                    debug_log(f"f_fraction: adding leading space")
-                    result = join_records(string2record(" "), result)
-
-    # Add trailing space if followed by content that needs separation
-    next_content = par.lstrip()
-    debug_log(f"f_fraction: next_content starts with '{next_content[:20] if next_content else ''}'")
-    if next_content:
-        add_trailing_space = False
-        
-        if next_content[0] == "\\":
-            # It's a LaTeX command - check if it's one that needs space before it
-            match = re.match(r"^\\([a-zA-Z]+)", next_content)
-            if match:
-                cmd_name = match.group(1)
-                # Commands that should NOT have space before them:
-                # - delimiters/structure: right, end, bigr, etc.
-                # - operators with built-in spacing: cdot, cdots, times, etc.
-                no_space_cmds = {
-                    "right", "end", "bigr", "Bigr", "biggr", "Biggr",
-                    "cdot", "cdots", "times", "div", "pm", "mp",
-                    "cap", "cup", "wedge", "vee", "oplus", "otimes", "ominus"
-                }
-                if cmd_name not in no_space_cmds:
-                    add_trailing_space = True
-        elif next_content[0] not in "+-=)>]}^_,;:\\ ":
-            # For non-backslash characters, check if it's a letter (including Unicode)
-            if unicodedata.category(next_content[0]).startswith("L") or next_content[0] in "([<":
-                add_trailing_space = True
-
-        if add_trailing_space:
-            debug_log(f"f_fraction: adding trailing space")
-            result = join_records(result, string2record(" "))
-
     out[-2] = result
     chunks.pop()
     out.pop()
@@ -1073,7 +983,7 @@ def f_underline():
         return
     parts = out[-1].split(",", 4)
     h, l, b = int(parts[0]) or 1, int(parts[1]), int(parts[2])
-    out[-1] = vStack(out[-1], string2record("‾" * l))
+    out[-1] = vStack(out[-1], string2record("_" * l))
     out[-1] = setbaseline(out[-1], b)
     finish(1, True)
 
@@ -1185,13 +1095,6 @@ def f_buildrel():
     out[:] = out[:-2]
     f_putover(rec, True)
     finish(3, True)
-
-
-def do_matrix():
-    global par
-    arg = get_balanced()  # Gets the raw content of {...}
-    if arg:
-        par = "\\begin{matrix}" + arg + "\\end{matrix}" + par
 
 
 def left():
@@ -1332,15 +1235,7 @@ def makehigh_inplace(idx: int, h: int, b: int, left_sp: int, right_sp: int):
     elif s == "}":
         c = ["}", " ", "│", "╮", "╯", "╞"]
     elif s in ("|", "||"):
-        # For tall vertical bars (determinant notation), use rounded corners
-        # left_sp=0 means this is a LEFT delimiter, left_sp=1 means RIGHT delimiter
-        if h >= 3:
-            if left_sp == 0:  # Left delimiter
-                c = ["|", " ", "│", "╭", "╰", "│"]
-            else:  # Right delimiter
-                c = ["|", " ", "│", "╮", "╯", "│"]
-        else:
-            c = ["|", "|", "|", "|", "|", "|"]
+        c = ["|", "|", "|", "|", "|", "|"]
     elif s == "[":
         c = ["[", " ", "│", "┌", "└", "│"]
     elif s == "]":
@@ -1608,56 +1503,6 @@ def f_end():
         puts(f"\\end{{{arg}}}")
 
 
-def f_trig_function(func_name: str):
-    """Handle trig functions like sin, cos, etc. that wrap their argument in parentheses."""
-    global par
-    # Output the function name
-    puts(func_name)
-    # Skip whitespace
-    par = par.lstrip()
-
-    if not par:
-        return
-
-    # Check if already has parentheses via \left( or just (
-    if par.startswith("\\left"):
-        return  # Let normal processing handle it
-    if par.startswith("("):
-        return  # Already parenthesized
-
-    # Get the next argument (braced group or single token)
-    if par.startswith("{"):
-        arg = get_balanced()
-        if arg is not None:
-            puts("(")
-            old_par = par
-            par = arg
-            while par:
-                if not paragraph(par):
-                    break
-            par = old_par
-            puts(")")
-    elif re.match(r"^\\[a-zA-Z]+", par):
-        # A macro like \theta - grab it and wrap
-        match = re.match(r"^(\\[a-zA-Z]+)\s*", par)
-        if match:
-            macro = match.group(1)
-            par = par[len(match.group(0)) :]
-            puts("(")
-            old_par = par
-            par = macro
-            while par:
-                if not paragraph(par):
-                    break
-            par = old_par
-            puts(")")
-    elif re.match(r"^[a-zA-Z0-9]", par):
-        # Single letter/digit
-        arg = par[0]
-        par = par[1:]
-        puts("(" + arg + ")")
-
-
 def f_get1() -> str:
     global out
     if len(out) - 1 != chunks[-1]:
@@ -1759,11 +1604,11 @@ def init_symbols():
     type_table["\\sum"] = "record"
     contents["\\sum"] = "3,3,1,0,__ \n❯  \n‾‾ "
     type_table["\\int"] = "record"
-    contents["\\int"] = "3,2,1,0,╭ \n| \n╯ "
+    contents["\\int"] = "3,2,1,0, ╭\n |\n ╯"
     type_table["\\oint"] = "record"
-    contents["\\oint"] = "3,2,1,0,╭ \n⦶ \n╯ "
+    contents["\\oint"] = "3,2,1,0, ╭\n ⦶\n ╯"
     type_table["\\prod"] = "record"
-    contents["\\prod"] = "3,4,1,0,___ \n│ │ \n    "
+    contents["\\prod"] = "2,3,1,0,___\n│ │"
     type_table["\\Sigma"] = "record"
     contents["\\Sigma"] = "3,2,1,0,__\n❯ \n‾‾"
 
@@ -1847,7 +1692,7 @@ def init_symbols():
         "\\mapsto": " ├──> ",
         "\\mid": " | ",
         "\\mp": " ∓ ",
-        "\\nabla": "∇",
+        "\\nabla": "∇",        
         "\\ne": " ≠ ",
         "\\neq": " ≠ ",
         "\\ni": " ∌ ",
@@ -1894,46 +1739,42 @@ def init_symbols():
         "}",
         "#",
         "&",
-        "arg",
-        "deg",
-        "det",
-        "dim",
-        "gcd",
-        "hom",
-        "inf",
-        "ker",
-        "lim",
-        "liminf",
-        "limsup",
-        "max",
-        "min",
-        "mod",
-        "Pr",
-        "sup",
-        "%",
-    ]:
-        type_table[f"\\{cmd}"] = "self"
-
-    for cmd in [
         "arccos",
         "arcsin",
         "arctan",
+        "arg",
         "cos",
         "cosh",
         "cot",
         "coth",
         "csc",
+        "deg",
+        "det",
+        "dim",
         "exp",
+        "gcd",
+        "hom",
+        "inf",
+        "ker",
         "lg",
+        "lim",
+        "liminf",
+        "limsup",
         "ln",
         "log",
+        "max",
+        "min",
+        "mod",
+        "Pr",
         "sec",
         "sin",
         "sinh",
+        "sup",
         "tan",
         "tanh",
+        "%",
     ]:
-        type_table[f"\\{cmd}"] = "trig"
+        type_table[f"\\{cmd}"] = "self"
 
     for cmd in [
         "mathcal",
@@ -2108,9 +1949,6 @@ def init_symbols():
     type_table["\\buildrel"] = "sub3"
     contents["\\buildrel"] = "buildrel"
 
-    type_table["\\matrix"] = "sub"
-    contents["\\matrix"] = "do_matrix"
-
     for env in ["equation", "gather", "align"]:
         environment[env] = "ddollar,ddollar"
 
@@ -2158,6 +1996,7 @@ def init_symbols():
     define("\\proclaim", "\\noindent ")
 
     defb(
+        "matrix",
         "vmatrix",
         "Vmatrix",
         "smallmatrix",
@@ -2177,225 +2016,100 @@ def init_symbols():
         if type_table.get(k) == "record" and contents[k].endswith("\n"):
             contents[k] = contents[k][:-1]
 
-
-def make_text_fancy(input_text: str) -> str:
+def make_text_fancy(input_text:str) -> str:
     result = []
     for char in input_text:
-        if "A" <= char <= "Z":
+        if 'A' <= char <= 'Z':
             script_map = {
-                "A": "𝒜",
-                "B": "𝓑",
-                "C": "𝒞",
-                "D": "𝓓",
-                "E": "𝓔",
-                "F": "𝓕",
-                "G": "𝓖",
-                "H": "𝓗",
-                "I": "𝓘",
-                "J": "𝓙",
-                "K": "𝓚",
-                "L": "𝓛",
-                "M": "𝓜",
-                "N": "𝓝",
-                "O": "𝓞",
-                "P": "𝓟",
-                "Q": "𝓠",
-                "R": "𝓡",
-                "S": "𝓢",
-                "T": "𝓣",
-                "U": "𝓤",
-                "V": "𝓥",
-                "W": "𝓦",
-                "X": "𝓧",
-                "Y": "𝓨",
-                "Z": "𝓩",
+                'A': '𝒜', 'B': '𝐵', 'C': '𝒞', 'D': '𝒟',
+                'E': '𝐸', 'F': '𝐹', 'G': '𝒢', 'H': '𝐻',
+                'I': '𝐼', 'J': '𝒥', 'K': '𝒦', 'L': '𝐿',
+                'M': '𝑀', 'N': '𝒩', 'O': '𝒪', 'P': '𝒫',
+                'Q': '𝒬', 'R': '𝑅', 'S': '𝒮', 'T': '𝒯',
+                'U': '𝒰', 'V': '𝒱', 'W': '𝒲', 'X': '𝒳',
+                'Y': '𝒴', 'Z': '𝒵'
             }
             result.append(script_map.get(char, char))
-        elif "a" <= char <= "z":
+        elif 'a' <= char <= 'z':
             script_map = {
-                "a": "𝒶",
-                "b": "𝒷",
-                "c": "𝒸",
-                "d": "𝒹",
-                "e": "𝑒",
-                "f": "𝒻",
-                "g": "𝑔",
-                "h": "𝒽",
-                "i": "𝒾",
-                "j": "𝒿",
-                "k": "𝓀",
-                "l": "𝓁",
-                "m": "𝓂",
-                "n": "𝓃",
-                "o": "𝑜",
-                "p": "𝓅",
-                "q": "𝓆",
-                "r": "𝓇",
-                "s": "𝓈",
-                "t": "𝓉",
-                "u": "𝓊",
-                "v": "𝓋",
-                "w": "𝓌",
-                "x": "𝓍",
-                "y": "𝓎",
-                "z": "𝓏",
+                'a': '𝒶', 'b': '𝒷', 'c': '𝒸', 'd': '𝒹',
+                'e': '𝑒', 'f': '𝒻', 'g': '𝑔', 'h': '𝒽',
+                'i': '𝒾', 'j': '𝒿', 'k': '𝓀', 'l': '𝓁',
+                'm': '𝓂', 'n': '𝓃', 'o': '𝑜', 'p': '𝓅',
+                'q': '𝓆', 'r': '𝓇', 's': '𝓈', 't': '𝓉',
+                'u': '𝓊', 'v': '𝓋', 'w': '𝓌', 'x': '𝓍',
+                'y': '𝓎', 'z': '𝓏'
             }
             result.append(script_map.get(char, char))
         else:
             result.append(char)
-    return "".join(result)
-
+    return ''.join(result)
 
 def make_text_bold(text_input: str) -> str:
     result = []
     for char in text_input:
-        if "A" <= char <= "Z":
+        if 'A' <= char <= 'Z':
             script_map = {
-                "A": "𝐀",
-                "B": "𝐁",
-                "C": "𝐂",
-                "D": "𝐃",
-                "E": "𝐄",
-                "F": "𝐅",
-                "G": "𝐆",
-                "H": "𝐇",
-                "I": "𝐈",
-                "J": "𝐉",
-                "K": "𝐊",
-                "L": "𝐋",
-                "M": "𝐌",
-                "N": "𝐍",
-                "O": "𝐎",
-                "P": "𝐏",
-                "Q": "𝐐",
-                "R": "𝐑",
-                "S": "𝐒",
-                "T": "𝐓",
-                "U": "𝐔",
-                "V": "𝐕",
-                "W": "𝐖",
-                "X": "𝐗",
-                "Y": "𝐘",
-                "Z": "𝐙",
+                'A': '𝐀', 'B': '𝐁', 'C': '𝐂', 'D': '𝐃',
+                'E': '𝐄', 'F': '𝐅', 'G': '𝐆', 'H': '𝐇',
+                'I': '𝐈', 'J': '𝐉', 'K': '𝐊', 'L': '𝐋',
+                'M': '𝐌', 'N': '𝐍', 'O': '𝐎', 'P': '𝐏',
+                'Q': '𝐐', 'R': '𝐑', 'S': '𝐒', 'T': '𝐓',
+                'U': '𝐔', 'V': '𝐕', 'W': '𝐖', 'X': '𝐗',
+                'Y': '𝐘', 'Z': '𝐙'
             }
             result.append(script_map.get(char, char))
-        elif "a" <= char <= "z":
+        elif 'a' <= char <= 'z':
             script_map = {
-                "a": "𝐚",
-                "b": "𝐛",
-                "c": "𝐜",
-                "d": "𝐝",
-                "e": "𝐞",
-                "f": "𝐟",
-                "g": "𝐠",
-                "h": "𝐡",
-                "i": "𝐢",
-                "j": "𝐣",
-                "k": "𝐤",
-                "l": "𝐥",
-                "m": "𝐦",
-                "n": "𝐧",
-                "o": "𝐨",
-                "p": "𝐩",
-                "q": "𝐪",
-                "r": "𝐫",
-                "s": "𝐬",
-                "t": "𝐭",
-                "u": "𝐮",
-                "v": "𝐯",
-                "w": "𝐰",
-                "x": "𝐱",
-                "y": "𝐲",
-                "z": "𝐳",
+                'a': '𝐚', 'b': '𝐛', 'c': '𝐜', 'd': '𝐝',
+                'e': '𝐞', 'f': '𝐟', 'g': '𝐠', 'h': '𝐡',
+                'i': '𝐢', 'j': '𝐣', 'k': '𝐤', 'l': '𝐥',
+                'm': '𝐦', 'n': '𝐧', 'o': '𝐨', 'p': '𝐩',
+                'q': '𝐪', 'r': '𝐫', 's': '𝐬', 't': '𝐭',
+                'u': '𝐮', 'v': '𝐯', 'w': '𝐰', 'x': '𝐱',
+                'y': '𝐲', 'z': '𝐳'
             }
             result.append(script_map.get(char, char))
-        elif "0" <= char <= "9":
+        elif '0' <= char <= '9':
             # Mathematical bold digits
             script_map = {
-                "0": "𝟎",
-                "1": "𝟏",
-                "2": "𝟐",
-                "3": "𝟑",
-                "4": "𝟒",
-                "5": "𝟓",
-                "6": "𝟔",
-                "7": "𝟕",
-                "8": "𝟖",
-                "9": "𝟗",
+                '0': '𝟎', '1': '𝟏', '2': '𝟐', '3': '𝟑',
+                '4': '𝟒', '5': '𝟓', '6': '𝟔', '7': '𝟕',
+                '8': '𝟖', '9': '𝟗'
             }
             result.append(script_map.get(char, char))
         else:
             result.append(char)
-    return "".join(result)
-
+    return ''.join(result)
 
 def make_text_italic(text_input: str) -> str:
     result = []
     for char in text_input:
-        if "A" <= char <= "Z":
+        if 'A' <= char <= 'Z':
             script_map = {
-                "A": "𝐴",
-                "B": "𝐵",
-                "C": "𝐶",
-                "D": "𝐷",
-                "E": "𝐸",
-                "F": "𝐹",
-                "G": "𝐺",
-                "H": "𝐻",
-                "I": "𝐼",
-                "J": "𝐽",
-                "K": "𝐾",
-                "L": "𝐿",
-                "M": "𝑀",
-                "N": "𝑁",
-                "O": "𝑂",
-                "P": "𝑃",
-                "Q": "𝑄",
-                "R": "𝑅",
-                "S": "𝑆",
-                "T": "𝑇",
-                "U": "𝑈",
-                "V": "𝑉",
-                "W": "𝑊",
-                "X": "𝑋",
-                "Y": "𝑌",
-                "Z": "𝑍",
+                'A': '𝐴', 'B': '𝐵', 'C': '𝐶', 'D': '𝐷',
+                'E': '𝐸', 'F': '𝐹', 'G': '𝐺', 'H': '𝐻',
+                'I': '𝐼', 'J': '𝐽', 'K': '𝐾', 'L': '𝐿',
+                'M': '𝑀', 'N': '𝑁', 'O': '𝑂', 'P': '𝑃',
+                'Q': '𝑄', 'R': '𝑅', 'S': '𝑆', 'T': '𝑇',
+                'U': '𝑈', 'V': '𝑉', 'W': '𝑊', 'X': '𝑋',
+                'Y': '𝑌', 'Z': '𝑍'
             }
             result.append(script_map.get(char, char))
-        elif "a" <= char <= "z":
+        elif 'a' <= char <= 'z':
             script_map = {
-                "a": "𝑎",
-                "b": "𝑏",
-                "c": "𝑐",
-                "d": "𝑑",
-                "e": "𝑒",
-                "f": "𝑓",
-                "g": "𝑔",
-                "h": "ℎ",
-                "i": "𝑖",
-                "j": "𝑗",
-                "k": "𝑘",
-                "l": "𝑙",
-                "m": "𝑚",
-                "n": "𝑛",
-                "o": "𝑜",
-                "p": "𝑝",
-                "q": "𝑞",
-                "r": "𝑟",
-                "s": "𝑠",
-                "t": "𝑡",
-                "u": "𝑢",
-                "v": "𝑣",
-                "w": "𝑤",
-                "x": "𝑥",
-                "y": "𝑦",
-                "z": "𝑧",
+                'a': '𝑎', 'b': '𝑏', 'c': '𝑐', 'd': '𝑑',
+                'e': '𝑒', 'f': '𝑓', 'g': '𝑔', 'h': 'ℎ',
+                'i': '𝑖', 'j': '𝑗', 'k': '𝑘', 'l': '𝑙',
+                'm': '𝑚', 'n': '𝑛', 'o': '𝑜', 'p': '𝑝',
+                'q': '𝑞', 'r': '𝑟', 's': '𝑠', 't': '𝑡',
+                'u': '𝑢', 'v': '𝑣', 'w': '𝑤', 'x': '𝑥',
+                'y': '𝑦', 'z': '𝑧'
             }
             result.append(script_map.get(char, char))
         else:
             result.append(char)
-    return "".join(result)
-
+    return ''.join(result)
 
 def paragraph(input_text: str) -> bool:
     global par, secondtime, out, chunks, level, tokenByToken, curlength, argStack
@@ -2429,41 +2143,13 @@ def paragraph(input_text: str) -> bool:
             break
         piece = match.group(0)
         par = par[len(piece) :]
-
         if re.match(usualtokenclass, piece):
+            # Add leading space before binary operators in math mode
             in_math = len(wait) > 1 and any(
                 w in ("$", "$$", "}", "LeftRight", "endCell") for w in wait
             )
             if in_math and piece and piece[0] in "+-=":
                 puts(" " + piece)
-            # Add leading space before standalone differential terms (dt, dx, dy, etc.)
-            elif in_math:
-                diff_match = re.search(r"d[txyzrsuvw]\s*$", piece)
-                debug_log(f"checking diff in '{piece}': match={diff_match}")
-                if diff_match and diff_match.start() > 0:
-                    before = piece[: diff_match.start()]
-                    diff = piece[diff_match.start() :]
-                    puts(before)
-                    # Only add space if not preceded by / (as in dx/dt)
-                    if not before.endswith("/"):
-                        puts(" " + diff)
-                    else:
-                        puts(diff)
-                # Add space before ( when it starts a new term (not after operators)
-                elif piece.startswith("(") and len(out) > 0:
-                    last_out = out[-1] if out else ""
-                    # Check if the last output doesn't end with an operator or opening bracket
-                    last_char = (
-                        last_out.rstrip().split("\n")[0][-1:]
-                        if last_out.rstrip()
-                        else ""
-                    )
-                    if last_char and last_char not in "+-=*/(<[{":
-                        puts(" " + piece)
-                    else:
-                        puts(piece)
-                else:
-                    puts(piece)
             else:
                 puts(piece)
         else:
@@ -2508,11 +2194,9 @@ def paragraph(input_text: str) -> bool:
             elif typ == "record":
                 commit(contents.get(pure, empty()))
             elif typ == "self":
-                # suffix = " " if re.match(r"^\\[a-zA-Z]", pure) else ""
+                #suffix = " " if re.match(r"^\\[a-zA-Z]", pure) else ""
                 suffix = ""
                 puts(pure[1:] + suffix)
-            elif typ == "trig":
-                f_trig_function(pure[1:])
             elif typ == "fancy":
                 text = get_balanced()
                 puts(make_text_fancy(text))
