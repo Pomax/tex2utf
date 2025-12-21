@@ -262,6 +262,8 @@ def trim_end(idx: int):
     Args:
         idx: Index into output buffer
     """
+    if not state.out or idx < 0 or idx >= len(state.out):
+        return
     parts = state.out[idx].split(",", 4)
     h = int(parts[0])
     s = parts[4] if len(parts) > 4 else ""
@@ -277,6 +279,8 @@ def trim_beg(idx: int):
     Args:
         idx: Index into output buffer
     """
+    if not state.out or idx < 0 or idx >= len(state.out):
+        return
     parts = state.out[idx].split(",", 4)
     h = int(parts[0])
     s = parts[4] if len(parts) > 4 else ""

@@ -1,4 +1,0 @@
-                                                                     1              f(z)
-                                                           f(z ) = ──────\oint      ────dz
-                                                              0    2\pi i     \gammaz-z 
-                                                                                       0

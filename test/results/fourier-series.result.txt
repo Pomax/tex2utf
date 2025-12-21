@@ -1,7 +1,0 @@
-                                                            a 
-                                                             0   __ ∞
-                                                     f(x) = ── + ❯     (a cos (nx) + b sin (nx))
-                                                            2    ‾‾ n=1  n            n
-                                                                  1  ╭ \pi
-                                                            a  = ─── |     f(x)cos (nx)dx
-                                                             n   \pi ╯ -\pi

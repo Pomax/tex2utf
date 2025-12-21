@@ -1,2 +1,0 @@
-                                                          A  ──> B  ==> C \leftrightarrow D
-                                                               x \leqy \geqz \neqw  ≅ v

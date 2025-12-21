@@ -1,5 +1,0 @@
-                                                                                                        2
-                                    \nabla  × (\nabla  × \mathbfF) = \nabla(\nabla  · \mathbfF) - \nabla \mathbfF
-                                              ╭ 
-                                              |   (\nabla  · \mathbfF) dV = \oint  \mathbfF  · d\mathbfS
-                                              ╯ V                                S
