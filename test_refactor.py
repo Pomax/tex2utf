@@ -16,15 +16,15 @@ def run_command(cmd):
 def test_file(tex_file):
     """Test a single .tex file with both versions."""
     print(f"Testing: {tex_file}")
-    
+
     # Run original
     orig_cmd = [sys.executable, "tex2utf.py", str(tex_file)]
     orig_out, orig_err, orig_code = run_command(orig_cmd)
-    
+
     # Run refactored
     refactor_cmd = [sys.executable, "-m", "refactor", str(tex_file)]
     ref_out, ref_err, ref_code = run_command(refactor_cmd)
-    
+
     if orig_out == ref_out:
         print(f"  ✓ PASS - Output matches")
         return True
@@ -48,21 +48,21 @@ def main():
     if not test_dir.exists():
         print("No test directory found")
         return
-    
+
     tex_files = list(test_dir.glob("*.tex"))
     if not tex_files:
         print("No .tex files found in test directory")
         return
-    
+
     passed = 0
     failed = 0
-    
+
     for tex_file in sorted(tex_files):
         if test_file(tex_file):
             passed += 1
         else:
             failed += 1
-    
+
     print(f"\nResults: {passed} passed, {failed} failed")
     return failed == 0
 

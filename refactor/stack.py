@@ -35,20 +35,20 @@ from . import state
 def commit(rec: str):
     """
     Commit a record to the output buffer.
-    
+
     This is the primary way content gets added to the output.
     If we're at the top level, handles line-length checking.
     If we're in a group that's waiting for a certain number of
     items, may trigger the group's action callback.
-    
+
     Args:
         rec: A record string to add to output
     """
     from . import config
     from .output import prepare_cut
-    
+
     debug_log(f"commit: rec={rec[:50]}...")
-    
+
     # At top level, check line length
     if len(state.level) == 1:
         l = get_length(rec)
@@ -56,14 +56,14 @@ def commit(rec: str):
             rec = prepare_cut(rec)
             l = get_length(rec)
         state.curlength += l
-    
+
     # Add to output buffer
     state.out.append(rec)
-    
+
     # Track chunk boundary
     if len(state.out) - 1 != state.chunks[-1]:
         state.chunks.append(len(state.out) - 1)
-    
+
     # Check if current group is waiting for a specific number of items
     if len(state.level) > 1 and state.wait[len(state.level) - 1] == len(state.chunks) - state.level[len(state.level) - 1]:
         sub = state.action[len(state.level) - 1]
@@ -77,9 +77,9 @@ def commit(rec: str):
 def uncommit() -> str:
     """
     Remove and return the last committed record.
-    
+
     Used when we need to modify the last output item.
-    
+
     Returns:
         The removed record
     """
@@ -95,42 +95,42 @@ def uncommit() -> str:
 def finish(event, force_one_group: bool = False):
     """
     Finish (close) the current group.
-    
+
     Called when we encounter a closing delimiter or when a group
     has collected all its expected items.
-    
+
     Args:
         event: The event/token that triggered the close
         force_one_group: If True, keep output as single group
     """
     debug_log(f"finish: event={event}, force={force_one_group}")
-    
+
     if len(state.level) <= 1:
         return
-    
+
     # Ensure we have content for this group
     if len(state.out) < state.chunks[state.level[-1]]:
         state.out.append(empty())
-    
+
     state.chunks[:] = state.chunks[: state.level[-1] + 1]
-    
+
     # Save output if at level 2
     t = []
     if len(state.level) == 2 and not force_one_group:
         t = state.out[state.chunks[-1] :]
         state.out = state.out[: state.chunks[-1]]
-    
+
     # Pop the level
     state.level.pop()
     state.action.pop()
     state.tokenByToken.pop()
     state.wait.pop()
-    
+
     # Re-commit saved output
     if len(state.level) == 1 and not force_one_group:
         for rec in t:
             commit(rec)
-    
+
     # Check if parent group is now complete
     if len(state.level) > 1 and state.wait[-1] == len(state.chunks) - state.level[-1]:
         sub = state.action[-1]
@@ -143,10 +143,10 @@ def finish(event, force_one_group: bool = False):
 def finish_ignore(event):
     """
     Finish the current group and discard its output.
-    
+
     Used for commands like \\hphantom that consume arguments
     but produce no output.
-    
+
     Args:
         event: The event/token that triggered the close
     """
@@ -162,20 +162,20 @@ def finish_ignore(event):
 def start(event, act: str = ""):
     """
     Start a new group/scope.
-    
+
     Called when we encounter an opening delimiter or begin
     collecting arguments for a command.
-    
+
     Args:
         event: The closing event to wait for (e.g., "}", "$")
                or a number indicating how many items to collect
         act: Name of function to call when group completes
     """
     debug_log(f"start: event={event}, action={act}")
-    
+
     if state.chunks[state.level[-1]] <= len(state.out) - 1 and state.chunks[-1] <= len(state.out) - 1:
         state.chunks.append(len(state.out))
-    
+
     state.level.append(len(state.chunks) - 1)
     state.tokenByToken.append(0)
     state.wait.append(event)
@@ -185,13 +185,13 @@ def start(event, act: str = ""):
 def assertHave(n: int) -> bool:
     """
     Check if we have at least n chunks in the current group.
-    
+
     Used before operations that require a certain number of
     collected items (e.g., fraction needs 2 items).
-    
+
     Args:
         n: Required number of chunks
-        
+
     Returns:
         True if we have enough chunks
     """
@@ -203,9 +203,9 @@ def assertHave(n: int) -> bool:
 def collapse(n: int):
     """
     Collapse the last n chunks into joined records.
-    
+
     Merges multiple consecutive records within each chunk.
-    
+
     Args:
         n: Number of chunks to collapse
     """
@@ -228,26 +228,26 @@ def collapseAll():
 def collapseOne(n: int):
     """
     Collapse a single chunk by joining all its records.
-    
+
     Args:
         n: Index of chunk to collapse
     """
     from .join import join_records
-    
+
     if n >= len(state.chunks):
         return
-    
+
     if n == len(state.chunks) - 1:
         last = len(state.out) - 1
     else:
         last = state.chunks[n + 1] - 1
-    
+
     start_idx = state.chunks[n]
     debug_log(f"collapseOne: n={n}, start={start_idx}, last={last}")
-    
+
     if last <= start_idx:
         return
-    
+
     # Join all records in this chunk
     result = state.out[start_idx]
     for i in range(start_idx + 1, last + 1):
@@ -258,7 +258,7 @@ def collapseOne(n: int):
 def trim_end(idx: int):
     """
     Trim trailing whitespace from a record.
-    
+
     Args:
         idx: Index into output buffer
     """
@@ -275,7 +275,7 @@ def trim_end(idx: int):
 def trim_beg(idx: int):
     """
     Trim leading whitespace from a record.
-    
+
     Args:
         idx: Index into output buffer
     """
@@ -292,7 +292,7 @@ def trim_beg(idx: int):
 def trim_one(n: int):
     """
     Trim whitespace from both ends of a chunk.
-    
+
     Args:
         n: Chunk index
     """
@@ -306,7 +306,7 @@ def trim_one(n: int):
 def trim(n: int):
     """
     Trim whitespace from the last n chunks.
-    
+
     Args:
         n: Number of chunks to trim
     """
@@ -318,11 +318,11 @@ def trim(n: int):
 def finishBuffer():
     """
     Finish all pending groups and print remaining output.
-    
+
     Called at end of input or paragraph to flush everything.
     """
     from .output import do_print
-    
+
     while len(state.level) > 1:
         finish("")
     do_print(True)
@@ -331,7 +331,7 @@ def finishBuffer():
 def puts(s: str, no_expand: bool = False):
     """
     Convenience function to commit a string as a record.
-    
+
     Args:
         s: String to output
         no_expand: If True, spaces won't be expanded for justification
@@ -342,17 +342,17 @@ def puts(s: str, no_expand: bool = False):
 def callsub(sub: str):
     """
     Call a handler function by name.
-    
+
     Used to invoke callbacks when groups complete.
     Supports both simple names ("f_fraction") and names
     with arguments ("f_putover_string;^").
-    
+
     Args:
         sub: Function name, optionally with ";arg" suffix
     """
     from . import commands
     from . import math_ops
-    
+
     if ";" in sub:
         parts = sub.split(";", 1)
         name, arg = parts[0], parts[1]

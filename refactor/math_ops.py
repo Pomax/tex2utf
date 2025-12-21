@@ -45,16 +45,16 @@ from . import state
 def f_subscript():
     """
     Handle subscript after collecting the subscript content.
-    
+
     Sets up to also check for a following superscript (for combined sub/super).
     Called after _ and its argument have been parsed.
     """
     from . import stack
-    
+
     # Change wait to expect 2 items (subscript + optional superscript)
     state.wait[-1] = 2
     state.action[-1] = "f_subSuper"
-    
+
     # Check if superscript follows immediately
     if not re.match(r"\s*\^", state.par) and not re.match(r"\s*\\begin\s*\{Sp\}", state.par):
         stack.commit(empty())  # No superscript, commit empty placeholder
@@ -67,15 +67,15 @@ def f_subscript():
 def f_superscript():
     """
     Handle superscript after collecting the superscript content.
-    
+
     Sets up to also check for a following subscript (for combined super/sub).
     Called after ^ and its argument have been parsed.
     """
     from . import stack
-    
+
     state.wait[-1] = 2
     state.action[-1] = "f_superSub"
-    
+
     if not re.match(r"\s*_", state.par) and not re.match(r"\s*\\begin\s*\{Sb\}", state.par):
         stack.commit(empty())
     else:
@@ -86,7 +86,7 @@ def f_superscript():
 def f_subSuper():
     """Process subscript followed by optional superscript."""
     from . import stack
-    
+
     stack.trim(2)
     stack.collapse(2)
     if not stack.assertHave(2):
@@ -98,7 +98,7 @@ def f_subSuper():
 def f_superSub():
     """Process superscript followed by optional subscript."""
     from . import stack
-    
+
     stack.trim(2)
     stack.collapse(2)
     if not stack.assertHave(2):
@@ -110,18 +110,18 @@ def f_superSub():
 def sup_sub(p1_off: int, p2_off: int):
     """
     Combine superscript and subscript into a single stacked record.
-    
+
     Creates output like:
          n      (superscript)
         x       (baseline - empty row)
          m      (subscript)
-    
+
     Args:
         p1_off: Offset from end of out[] for superscript (0 or 1)
         p2_off: Offset from end of out[] for subscript (0 or 1)
     """
     from . import stack
-    
+
     # Get the two items from output buffer
     p1 = len(state.out) - 1 - p1_off  # Superscript position
     p2 = len(state.out) - 1 - p2_off  # Subscript position
@@ -131,16 +131,16 @@ def sup_sub(p1_off: int, p2_off: int):
     h2, l2 = int(parts2[0]) or 1, int(parts2[1])
     str1 = parts1[4] if len(parts1) > 4 else ""
     str2 = parts2[4] if len(parts2) > 4 else ""
-    
+
     # Handle case where both are empty
     if l1 == 0 and l2 == 0:
         stack.finish(2, True)
         return
-    
+
     l = max(l1, l2)
     state.chunks.pop()
     state.out.pop()
-    
+
     # Build stacked result based on what's present
     if l1 == 0:  # No superscript, only subscript
         h = h2 + 1
@@ -172,18 +172,18 @@ def sup_sub(p1_off: int, p2_off: int):
 def f_fraction():
     """
     Build a fraction from numerator and denominator.
-    
+
     Creates:
         numerator
         ─────────
         denominator
-    
+
     The fraction bar uses Unicode box-drawing character ─.
     Numerator and denominator are centered.
     """
     from . import stack
     from .join import join_records
-    
+
     debug_log(f"f_fraction called")
     stack.trim(2)
     stack.collapse(2)
@@ -191,24 +191,24 @@ def f_fraction():
         debug_log("f_fraction: not enough chunks")
         stack.finish("", True)
         return
-    
+
     # Get numerator and denominator
     numer = state.out[-2]
     denom = state.out[-1]
     debug_log(f"f_fraction: numer={numer}, denom={denom}")
-    
+
     # Calculate width (max of numerator and denominator)
     l1, l2 = get_length(numer), get_length(denom)
     length = max(l1, l2)
-    
+
     # Center both parts and add fraction bar
     numer_centered = center(length, numer)
     denom_centered = center(length, denom)
     line_rec = string2record("─" * length)  # Fraction bar
-    
+
     # Stack: numerator, then bar, then denominator
     result = vStack(vStack(numer_centered, line_rec), denom_centered)
-    
+
     # Set baseline at the fraction bar
     numer_h = get_height(numer_centered)
     result = setbaseline(result, numer_h)
@@ -238,7 +238,7 @@ def f_fraction():
     debug_log(f"f_fraction: next_content starts with '{next_content[:20] if next_content else ''}'")
     if next_content:
         add_trailing_space = False
-        
+
         if next_content[0] == "\\":
             match = re.match(r"^\\([a-zA-Z]+)", next_content)
             if match:
@@ -269,7 +269,7 @@ def f_fraction():
 def f_choose():
     """
     Build a binomial coefficient (n choose k).
-    
+
     Creates:
         ╭   ╮
         │ n │
@@ -279,13 +279,13 @@ def f_choose():
     """
     from . import stack
     from .brackets import makehigh_inplace
-    
+
     stack.trim(2)
     stack.collapse(2)
     if not stack.assertHave(2):
         stack.finish("", True)
         return
-    
+
     # Stack n over k with space between
     l1, l2 = get_length(state.out[-2]), get_length(state.out[-1])
     length = max(l1, l2)
@@ -293,13 +293,13 @@ def f_choose():
         vStack(center(length, state.out[-2]), string2record(" " * length)),
         center(length, state.out[-1]),
     )
-    
+
     # Add parentheses
     state.chunks.append(len(state.out))
     state.out.append(empty())
     state.out[-3] = string2record("(")
     state.out[-1] = string2record(")")
-    
+
     # Make parentheses tall enough
     parts = state.out[-2].split(",", 4)
     h, b = int(parts[0]), int(parts[2])
@@ -311,22 +311,22 @@ def f_choose():
 def f_radical():
     """
     Build a square root symbol around content.
-    
+
     Creates:
          ┌───┐
          │ x │
         ⟍│   │
-    
+
     Uses Unicode box-drawing characters for the radical.
     """
     from . import stack
-    
+
     stack.trim(1)
     stack.collapse(1)
     if not stack.assertHave(1):
         stack.finish("", True)
         return
-    
+
     parts = state.out[-1].split(",", 4)
     h, l, b = int(parts[0]) or 1, int(parts[1]), int(parts[2])
     content = parts[4] if len(parts) > 4 else ""
@@ -355,13 +355,13 @@ def f_radical():
 def f_overline():
     """
     Add an overline above content.
-    
+
     Creates:
         ___
         abc
     """
     from . import stack
-    
+
     stack.trim(1)
     stack.collapse(1)
     if not stack.assertHave(1):
@@ -377,13 +377,13 @@ def f_overline():
 def f_underline():
     """
     Add an underline below content.
-    
+
     Creates:
         abc
         ‾‾‾
     """
     from . import stack
-    
+
     stack.trim(1)
     stack.collapse(1)
     if not stack.assertHave(1):
@@ -402,14 +402,14 @@ def f_not():
     """
     from . import stack
     from .join import join_records
-    
+
     stack.collapse(1)
     if not stack.assertHave(1):
         stack.finish("", True)
         return
     parts = state.out[-1].split(",", 4)
     s = parts[4] if len(parts) > 4 else ""
-    
+
     # Map common negations
     if s == "=":
         state.out[-1] = state.contents.get("\\neq", string2record("≠"))
@@ -425,21 +425,21 @@ def f_not():
 def f_putover(rec_or_str, no_finish: bool = False):
     """
     Put an accent or symbol over the current content.
-    
+
     Used for \\hat, \\tilde, \\dot, etc.
-    
+
     Args:
         rec_or_str: The accent to place (record string or plain string)
         no_finish: If True, don't call finish (for compound operations)
     """
     from . import stack
-    
+
     # Handle both record string and plain string
     if isinstance(rec_or_str, str) and not rec_or_str.startswith(("0,", "1,", "2,", "3,", "4,", "5,", "6,", "7,", "8,", "9,")):
         rec = string2record(rec_or_str)
     else:
         rec = rec_or_str
-    
+
     stack.trim(1)
     stack.collapse(1)
     if not stack.assertHave(1):
@@ -461,12 +461,12 @@ def f_putover(rec_or_str, no_finish: bool = False):
 def f_putunder(rec: str):
     """
     Put a symbol under the current content.
-    
+
     Args:
         rec: The symbol to place below (as a record string)
     """
     from . import stack
-    
+
     stack.trim(1)
     stack.collapse(1)
     if not stack.assertHave(1):
@@ -484,9 +484,9 @@ def f_putunder(rec: str):
 def f_putover_string(s: str):
     """
     Put a string as an accent over content.
-    
+
     Convenience wrapper for f_putover.
-    
+
     Args:
         s: The accent character(s)
     """
@@ -496,11 +496,11 @@ def f_putover_string(s: str):
 def f_widehat():
     """
     Create a wide hat accent that spans the content width.
-    
+
     Creates /~~~\\ for wide content, ^ for narrow.
     """
     from . import stack
-    
+
     stack.trim(1)
     stack.collapse(1)
     l = get_length(state.out[-1])
@@ -515,7 +515,7 @@ def f_widetilde():
     Create a wide tilde accent that spans the content width.
     """
     from . import stack
-    
+
     stack.trim(1)
     stack.collapse(1)
     l = get_length(state.out[-1])
@@ -531,13 +531,13 @@ def f_widetilde():
 def f_putpar(delims: str):
     """
     Wrap content in delimiters (parentheses, brackets, etc.).
-    
+
     Args:
         delims: "left;right" delimiter pair, e.g., "(;)" or "[;]"
     """
     from . import stack
     from .join import join_records
-    
+
     stack.trim(1)
     l, r = delims.split(";")
     stack.collapse(1)
@@ -551,11 +551,11 @@ def f_putpar(delims: str):
 def f_buildrel():
     """
     Handle \\buildrel command (put one thing over another with relation).
-    
+
     Syntax: \\buildrel expr1 \\over expr2
     """
     from . import stack
-    
+
     stack.trim(3)
     stack.collapse(3)
     if not stack.assertHave(3):
@@ -572,11 +572,11 @@ def f_buildrel():
 def f_literal_no_length():
     """
     Mark content as having zero logical width.
-    
+
     Used for content that shouldn't affect layout calculations.
     """
     from . import stack
-    
+
     stack.collapse(1)
     if not stack.assertHave(1):
         stack.finish("", True)
@@ -588,14 +588,14 @@ def f_literal_no_length():
 def f_arrow(tips: str):
     """
     Create a horizontal arrow with labels above and below.
-    
+
     Used for commutative diagrams: @>label>> or @<label<<
-    
+
     Args:
         tips: "left_tip;right_tip", e.g., "<;>" or ";>"
     """
     from . import stack
-    
+
     l, r = tips.split(";")
     stack.trim(2)
     stack.collapse(2)
@@ -604,7 +604,7 @@ def f_arrow(tips: str):
         return
     l1, l2 = get_length(state.out[-2]), get_length(state.out[-1])
     length = max(l1, l2)
-    
+
     # Stack: label above, arrow, label below
     state.out[-2] = vStack(
         vStack(
@@ -621,15 +621,15 @@ def f_arrow(tips: str):
 def f_arrow_v(tips: str):
     """
     Create a vertical arrow with labels on sides.
-    
+
     Used for commutative diagrams: @VlabelVV or @AlabelAA
-    
+
     Args:
         tips: "top_tip;bottom_tip"
     """
     from . import stack
     from .join import join_records
-    
+
     l, r = tips.split(";")
     stack.trim(2)
     stack.collapse(2)

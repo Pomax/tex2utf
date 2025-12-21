@@ -21,15 +21,15 @@ letters may use italic forms as fallbacks).
 def make_text_fancy(input_text: str) -> str:
     """
     Convert text to fancy/script style (\\mathcal).
-    
+
     Uses Unicode Mathematical Script characters where available.
-    
+
     Args:
         input_text: Plain ASCII text
-        
+
     Returns:
         Text with script-style Unicode characters
-    
+
     Example:
         make_text_fancy("ABC") -> "𝒜𝓑𝒞"
     """
@@ -63,15 +63,15 @@ def make_text_fancy(input_text: str) -> str:
 def make_text_bold(text_input: str) -> str:
     """
     Convert text to bold style (\\mathbf).
-    
+
     Uses Unicode Mathematical Bold characters.
-    
+
     Args:
         text_input: Plain ASCII text
-        
+
     Returns:
         Text with bold-style Unicode characters
-    
+
     Example:
         make_text_bold("ABC") -> "𝐀𝐁𝐂"
     """
@@ -111,15 +111,15 @@ def make_text_bold(text_input: str) -> str:
 def make_text_italic(text_input: str) -> str:
     """
     Convert text to italic style (\\mathit).
-    
+
     Uses Unicode Mathematical Italic characters.
-    
+
     Args:
         text_input: Plain ASCII text
-        
+
     Returns:
         Text with italic-style Unicode characters
-    
+
     Example:
         make_text_italic("ABC") -> "𝐴𝐵𝐶"
     """

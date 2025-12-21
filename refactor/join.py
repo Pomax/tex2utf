@@ -28,19 +28,19 @@ from .brackets import regenerate_angle_bracket
 def join_records(rec1: str, rec2: str) -> str:
     """
     Horizontally join two records with baseline alignment.
-    
+
     The records are positioned so their baselines align. If one record
     is taller than the other, the shorter one is padded with blank lines
     above and/or below as needed.
-    
+
     Special handling is included for angle brackets (⟨ ⟩) which need
     to be regenerated when adjacent content is taller than the original
     bracket.
-    
+
     Args:
         rec1: Left record
         rec2: Right record
-        
+
     Returns:
         Combined record with rec1 to the left of rec2
     """
@@ -51,20 +51,20 @@ def join_records(rec1: str, rec2: str) -> str:
     h2, l2, b2, sp2 = int(parts2[0]), int(parts2[1]), int(parts2[2]), int(parts2[3])
     str1 = parts1[4] if len(parts1) > 4 else ""
     str2 = parts2[4] if len(parts2) > 4 else ""
-    
+
     # Ensure minimum height of 1
     if not h1:
         h1 = 1
     if not h2:
         h2 = 1
-    
+
     # Calculate combined dimensions with baseline alignment
     b = max(b1, b2)  # New baseline is the maximum
     below1 = h1 - b1 - 1  # Lines below baseline in rec1
     below2 = h2 - b2 - 1  # Lines below baseline in rec2
     h = b + max(below1, below2) + 1  # Total height
     l = l1 + l2  # Total width
-    
+
     # Split content into lines
     lines1 = str1.split("\n") if str1 else []
     lines2 = str2.split("\n") if str2 else []
@@ -142,21 +142,21 @@ def join_records(rec1: str, rec2: str) -> str:
     # Ensure baseline row of lines2 has content (for proper alignment)
     if b2 < len(lines2) and len(lines2[b2]) == 0:
         lines2[b2] = " " * l2
-    
+
     # Build combined result with proper vertical alignment
     result = [""] * h
-    
+
     # Place lines1 content
     for i in range(h1):
         idx = b - b1 + i  # Offset by baseline difference
         if 0 <= idx < h:
             result[idx] = lines1[i].ljust(l1)
-    
+
     # Pad any missing rows on left side
     for i in range(h):
         if len(result[i]) < l1:
             result[i] = result[i].ljust(l1)
-    
+
     # Append lines2 content
     for i in range(h2):
         idx = b - b2 + i
@@ -171,7 +171,7 @@ def join_records(rec1: str, rec2: str) -> str:
         debug_log(f"  Calculated: h={h}, b={b}")
         debug_log(f"  lines1={lines1}")
         debug_log(f"  result={result}")
-    
+
     return f"{h},{l},{b},{sp1+sp2}," + "\n".join(result)
 
 

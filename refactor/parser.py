@@ -43,79 +43,79 @@ from .text_transforms import make_text_fancy, make_text_bold, make_text_italic
 def paragraph(input_text: str) -> bool:
     """
     Process a paragraph (or complete document) of LaTeX input.
-    
+
     This is the main entry point for parsing. It handles:
     - Comment removal
     - Whitespace normalization
     - Tokenization
     - Command dispatch
-    
+
     Args:
         input_text: Raw LaTeX input string
-        
+
     Returns:
         True if processing was successful
     """
     state.par = input_text
-    
+
     # Handle empty input
     if not state.par:
         return False
     if not re.search(r"\S", state.par):
         return True
-    
+
     # Skip preamble - find \begin{document} if present
     match = re.search(r"\\begin\{document\}", state.par)
     if match:
         state.par = state.par[match.start():]
-    
+
     # Add blank line between paragraphs (except first)
     if state.secondtime and not config.opt_by_par:
         print()
     state.secondtime += 1
-    
+
     # =========================================================================
     # Preprocessing: Clean up the input
     # =========================================================================
-    
+
     # Remove comments: % to end of line (but not escaped \%)
     # The pattern handles \\% (escaped backslash then percent)
     state.par = re.sub(r"((^|[^\\])(\\\\)*)(%.*\n[ \t]*)+", r"\1", state.par, flags=re.MULTILINE)
-    
+
     # Convert double newlines (blank lines) to \par commands
     state.par = re.sub(r"\n\s*\n", r"\\par ", state.par)
-    
+
     # Normalize all whitespace to single spaces
     state.par = re.sub(r"\s+", " ", state.par)
     state.par = state.par.rstrip()
-    
+
     # Remove space after $$ (display math shouldn't have leading space)
     state.par = re.sub(r"(\$\$)\s+", r"\1", state.par)
-    
+
     # Remove trailing \par (no need for final paragraph break)
     state.par = re.sub(r"\\par\s*$", "", state.par)
-    
+
     # Counter to prevent infinite macro expansion loops
     defcount = 0
-    
+
     # Add paragraph indentation (5 spaces) unless suppressed
     if not config.opt_noindent and not re.match(r"^\s*\\noindent\s*([^a-zA-Z\s]|$)", state.par):
         stack.commit("1,5,0,0,     ")
     else:
         state.par = re.sub(r"^\s*\\noindent\s*([^a-zA-Z\s]|$)", r"\1", state.par)
-    
+
     # Choose token pattern based on current parsing mode
     # tokenByToken mode parses one token at a time (for collecting arguments)
     # Otherwise, we can grab multiple regular characters at once
     token_re = re.compile(tokenpattern if state.tokenByToken[-1] else multitokenpattern)
-    
+
     # =========================================================================
     # Main Parsing Loop
     # =========================================================================
     while state.par:
         # Skip leading whitespace (unless in token-by-token mode)
         state.par = state.par.lstrip() if not state.tokenByToken[-1] else state.par
-        
+
         # Match the next token
         match = token_re.match(state.par)
         if not match:
@@ -131,7 +131,7 @@ def paragraph(input_text: str) -> bool:
             in_math = len(state.wait) > 1 and any(
                 w in ("$", "$$", "}", "LeftRight", "endCell") for w in state.wait
             )
-            
+
             if in_math and piece and piece[0] in "+-=":
                 # Add space before operators in math mode for readability
                 stack.puts(" " + piece)
@@ -167,7 +167,7 @@ def paragraph(input_text: str) -> bool:
             else:
                 # Not in math mode - just output the text
                 stack.puts(piece)
-        
+
         # ---------------------------------------------------------------------
         # Handle active tokens (commands and special characters)
         # ---------------------------------------------------------------------
@@ -175,7 +175,7 @@ def paragraph(input_text: str) -> bool:
             pure = piece.rstrip()  # Remove trailing whitespace from macro
             typ = state.type_table.get(pure)
             debug_log(f"token: '{pure}' type={typ}")
-            
+
             # -----------------------------------------------------------------
             # User-defined macro expansion
             # -----------------------------------------------------------------
@@ -183,12 +183,12 @@ def paragraph(input_text: str) -> bool:
                 defcount += 1
                 if defcount > config.maxdef:
                     break  # Prevent infinite expansion
-                
+
                 # Collect macro arguments
                 t = [""]  # t[0] unused, t[1] = #1, t[2] = #2, etc.
                 for i in range(1, state.args.get(pure, 0) + 1):
                     t.append(commands.get_balanced() or "")
-                
+
                 # Get the macro definition and substitute arguments
                 sub = state.defs.get(pure, "")
                 if state.args.get(pure, 0):
@@ -196,10 +196,10 @@ def paragraph(input_text: str) -> bool:
                     for i in range(state.args[pure], 0, -1):
                         sub = re.sub(f"([^\\\\#])#{i}", f"\\1{t[i]}", sub)
                         sub = re.sub(f"^#{i}", t[i], sub)
-                
+
                 # Prepend expansion to input for further processing
                 state.par = sub + state.par
-            
+
             # -----------------------------------------------------------------
             # Simple subroutine call (no arguments)
             # -----------------------------------------------------------------
@@ -216,7 +216,7 @@ def paragraph(input_text: str) -> bool:
                     func = getattr(commands, sub, None)
                     if func:
                         func()
-            
+
             # -----------------------------------------------------------------
             # Subroutine with N arguments (sub1, sub2, sub3)
             # -----------------------------------------------------------------
@@ -227,7 +227,7 @@ def paragraph(input_text: str) -> bool:
                 # Start collecting n arguments, then call func_name
                 stack.start(n, func_name)
                 state.tokenByToken[-1] = 1  # Parse token-by-token for arguments
-            
+
             # -----------------------------------------------------------------
             # Get command (outputs itself plus collects arguments)
             # -----------------------------------------------------------------
@@ -236,7 +236,7 @@ def paragraph(input_text: str) -> bool:
                 stack.start(n + 1)
                 stack.puts(piece)
                 state.tokenByToken[-1] = 1
-            
+
             # -----------------------------------------------------------------
             # Discard command (consumes and ignores arguments)
             # -----------------------------------------------------------------
@@ -244,26 +244,26 @@ def paragraph(input_text: str) -> bool:
                 n = int(typ[7:])
                 stack.start(n, "f_discard")
                 state.tokenByToken[-1] = 1
-            
+
             # -----------------------------------------------------------------
             # Pre-built record (e.g., \sum, \int)
             # -----------------------------------------------------------------
             elif typ == "record":
                 stack.commit(state.contents.get(pure, stack.empty()))
-            
+
             # -----------------------------------------------------------------
             # Self-printing command (outputs its name without backslash)
             # -----------------------------------------------------------------
             elif typ == "self":
                 suffix = ""
                 stack.puts(pure[1:] + suffix)
-            
+
             # -----------------------------------------------------------------
             # Trigonometric function (wraps argument in parentheses)
             # -----------------------------------------------------------------
             elif typ == "trig":
                 commands.f_trig_function(pure[1:])
-            
+
             # -----------------------------------------------------------------
             # Text style transformations
             # -----------------------------------------------------------------
@@ -276,7 +276,7 @@ def paragraph(input_text: str) -> bool:
             elif typ == "italic":
                 text = commands.get_balanced()
                 stack.puts(make_text_italic(text))
-            
+
             # -----------------------------------------------------------------
             # Paragraph + self-printing
             # -----------------------------------------------------------------
@@ -293,7 +293,7 @@ def paragraph(input_text: str) -> bool:
                     stack.commit("1,5,0,0,     ")
                 else:
                     state.par = re.sub(r"^\s*\\noindent(\s+|([^a-zA-Z\s])|$)", r"\2", state.par)
-            
+
             # -----------------------------------------------------------------
             # String replacement (e.g., Greek letters, symbols)
             # -----------------------------------------------------------------
@@ -307,22 +307,22 @@ def paragraph(input_text: str) -> bool:
                     if last_s.endswith(" "):
                         content = content[1:]
                 stack.puts(content, True)  # no_expand=True to preserve spacing
-            
+
             # -----------------------------------------------------------------
             # Commands to ignore completely
             # -----------------------------------------------------------------
             elif typ == "nothing":
                 pass
-            
+
             # -----------------------------------------------------------------
             # Unknown command - output as-is
             # -----------------------------------------------------------------
             else:
                 stack.puts(piece)
-        
+
         # Update token pattern based on current mode
         token_re = re.compile(tokenpattern if state.tokenByToken[-1] else multitokenpattern)
-    
+
     # Flush any remaining output
     if state.out:
         stack.finishBuffer()

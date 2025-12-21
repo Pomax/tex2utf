@@ -22,13 +22,13 @@ from . import state
 def printrecord(rec: str):
     """
     Print a record to stdout.
-    
+
     Handles multi-line records by:
     - Splitting into individual lines
     - Removing trailing whitespace from each line
     - Removing common leading whitespace (de-indenting)
     - Printing non-empty lines
-    
+
     Args:
         rec: A record string to print
     """
@@ -67,14 +67,14 @@ def printrecord(rec: str):
 def exp_sp_maker(fr: int, re_val: int):
     """
     Create a space expander function for text justification.
-    
+
     Returns a function that replaces each space with multiple spaces
     to justify text to fill the line width.
-    
+
     Args:
         fr: Base number of extra spaces per space
         re_val: Number of spaces that get one additional space
-        
+
     Returns:
         A function suitable for use with re.sub
     """
@@ -92,29 +92,29 @@ def exp_sp_maker(fr: int, re_val: int):
 def do_print(force: bool = False):
     """
     Print the current output buffer.
-    
+
     This is the main output function. It:
     1. Determines how much of the buffer to print
     2. Optionally justifies the text (if not ragged mode)
     3. Joins all records horizontally
     4. Prints the result
     5. Clears the printed portion from the buffer
-    
+
     Args:
         force: If True, print even if buffer isn't full
     """
     from . import config
     from .join import join_records
-    
+
     # Determine last record to print
     last = state.chunks[state.level[1]] - 1 if len(state.level) > 1 else len(state.out) - 1
     if last < 0:
         return
-    
+
     # Calculate total length
     l = sum(get_length(state.out[i]) for i in range(last + 1))
     state.curlength = l
-    
+
     # Justify text if needed (expand spaces to fill line width)
     if not force and l <= config.linelength:
         extra = config.linelength - state.curlength
@@ -139,14 +139,14 @@ def do_print(force: bool = False):
                     if not h:
                         s = re.sub(r" ", expander, s)
                         state.out[i] = string2record(s)
-    
+
     # Join all records and print
     if last >= 0:
         result = state.out[0]
         for i in range(1, last + 1):
             result = join_records(result, state.out[i])
         printrecord(result)
-    
+
     # Clear printed portion from buffer
     state.curlength = 0
     if len(state.out) > last + 1:
@@ -164,31 +164,31 @@ def do_print(force: bool = False):
 def prepare_cut(rec: str) -> str:
     """
     Prepare a record for line breaking if it's too long.
-    
+
     Attempts to break at spaces to keep lines within linelength.
     Used when a record would exceed the maximum line width.
-    
+
     Args:
         rec: A record that may be too long
-        
+
     Returns:
         The (possibly truncated) record, with earlier portions already printed
     """
     from . import config
-    
+
     if len(state.level) != 1:
         return rec
-    
+
     lenadd = get_length(rec)
     lenrem = config.linelength - state.curlength
-    
+
     if lenadd + state.curlength <= config.linelength:
         return rec
-    
+
     parts = rec.split(",", 4)
     h = int(parts[0])
     s = parts[4] if len(parts) > 4 else ""
-    
+
     # Only break single-line records at spaces
     if h < 2:
         while lenrem < lenadd:
@@ -205,7 +205,7 @@ def prepare_cut(rec: str) -> str:
                 lenrem = config.linelength
             else:
                 break
-    
+
     # Force break if still too long
     if lenadd > config.linelength and lenrem:
         p = cut(lenrem, rec)
@@ -213,15 +213,15 @@ def prepare_cut(rec: str) -> str:
         state.curlength += lenrem
         do_print()
         rec = p[1]
-    
+
     do_print()
-    
+
     # Break remaining content if still too long
     while get_length(rec) > config.linelength:
         p = cut(config.linelength, rec)
         state.out[:] = [p[0]]
         do_print()
         rec = p[1]
-    
+
     state.curlength = 0
     return rec

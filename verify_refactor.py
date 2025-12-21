@@ -22,38 +22,38 @@ def run_command(cmd):
 def test_file(tex_file):
     """Test a single .tex file with both versions."""
     filename = tex_file.name
-    
+
     # Check if this test is known to be broken in the original
     if filename in KNOWN_BROKEN_IN_ORIGINAL:
         print(f"Testing: {filename}", end=" ... ")
         print("SKIP (known broken in original)")
         return None
-    
+
     print(f"Testing: {filename}", end=" ... ")
-    
+
     # Run original
     orig_cmd = [sys.executable, "tex2utf.py", str(tex_file)]
     orig_out, orig_err, orig_code = run_command(orig_cmd)
-    
+
     # Run refactored
     refactor_cmd = [sys.executable, "refactor/refactor.py", str(tex_file)]
     ref_out, ref_err, ref_code = run_command(refactor_cmd)
-    
+
     if orig_code != 0:
         print(f"SKIP (original failed: {orig_err.strip()[:50]})")
         return None
-    
+
     if ref_code != 0:
         print(f"FAIL (refactor error: {ref_err.strip()[:50]})")
         return False
-    
+
     if orig_out == ref_out:
         print("PASS")
         return True
     else:
         print("FAIL (output differs)")
         print(f"    Original length: {len(orig_out)}, Refactored length: {len(ref_out)}")
-        
+
         # Find first difference
         min_len = min(len(orig_out), len(ref_out))
         for i in range(min_len):
@@ -67,34 +67,34 @@ def test_file(tex_file):
         else:
             if len(orig_out) != len(ref_out):
                 print(f"    Outputs differ in length only")
-        
+
         return False
 
 
 def main():
     """Run tests on all .tex files in test directory."""
     test_dir = Path("test")
-    
+
     if not test_dir.exists():
         print(f"Error: test directory not found at {test_dir.absolute()}")
         return 1
-    
+
     tex_files = sorted(test_dir.glob("*.tex"))
-    
+
     if not tex_files:
         print("No .tex files found in test directory")
         return 1
-    
+
     print(f"Found {len(tex_files)} test files")
     if KNOWN_BROKEN_IN_ORIGINAL:
         print(f"({len(KNOWN_BROKEN_IN_ORIGINAL)} marked as known broken in original)\n")
     else:
         print()
-    
+
     passed = 0
     failed = 0
     skipped = 0
-    
+
     for tex_file in tex_files:
         result = test_file(tex_file)
         if result is True:
@@ -103,11 +103,11 @@ def main():
             failed += 1
         else:
             skipped += 1
-    
+
     print(f"\n{'='*50}")
     print(f"Results: {passed} passed, {failed} failed, {skipped} skipped")
     print(f"{'='*50}")
-    
+
     return 0 if failed == 0 else 1
 
 

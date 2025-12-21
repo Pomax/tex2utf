@@ -20,7 +20,7 @@ Example:
 --------
 A simple fraction a/b might be represented as:
     "3,1,1,0,a\\n─\\nb"
-    
+
 This is 3 lines tall, 1 character wide, baseline at line 1 (the fraction bar),
 0 expandable spaces, and content showing 'a' over '─' over 'b'.
 
@@ -42,7 +42,7 @@ import re
 def empty() -> str:
     """
     Create an empty record with zero dimensions.
-    
+
     Returns:
         An empty record string "0,0,0,0,"
     """
@@ -52,12 +52,12 @@ def empty() -> str:
 def string2record(s: str, no_expand: bool = False) -> str:
     """
     Convert a plain string to a record.
-    
+
     Args:
         s: The string to convert
         no_expand: If True, mark spaces as non-expandable (height=1)
                    If False, count spaces for justification (height=0)
-    
+
     Returns:
         A record string representing the input
     """
@@ -72,10 +72,10 @@ def string2record(s: str, no_expand: bool = False) -> str:
 def get_length(rec: str) -> int:
     """
     Get the width (length) of a record.
-    
+
     Args:
         rec: A record string
-        
+
     Returns:
         The width in characters
     """
@@ -86,10 +86,10 @@ def get_length(rec: str) -> int:
 def get_height(rec: str) -> int:
     """
     Get the height of a record in lines.
-    
+
     Args:
         rec: A record string
-        
+
     Returns:
         The height (minimum 1)
     """
@@ -101,13 +101,13 @@ def get_height(rec: str) -> int:
 def setbaseline(rec: str, new_b: int) -> str:
     """
     Set the baseline of a record.
-    
+
     The baseline indicates which line should align with adjacent content.
-    
+
     Args:
         rec: A record string
         new_b: The new baseline index
-        
+
     Returns:
         The modified record string
     """
@@ -117,13 +117,13 @@ def setbaseline(rec: str, new_b: int) -> str:
 def record_forcelength(rec: str, new_len: int) -> str:
     """
     Force a record to report a specific length.
-    
+
     Used for special cases where visual width differs from logical width.
-    
+
     Args:
         rec: A record string
         new_len: The new length value
-        
+
     Returns:
         The modified record string
     """
@@ -133,13 +133,13 @@ def record_forcelength(rec: str, new_len: int) -> str:
 def cut(length: int, rec: str):
     """
     Split a record at a given width.
-    
+
     Used for line-breaking long content.
-    
+
     Args:
         length: Position at which to cut
         rec: A record string
-        
+
     Returns:
         Tuple of (left_part, right_part) records
     """
@@ -164,13 +164,13 @@ def cut(length: int, rec: str):
 def vStack(rec1: str, rec2: str) -> str:
     """
     Vertically stack two records (rec1 on top of rec2).
-    
+
     The baseline is set to the bottom of rec1.
-    
+
     Args:
         rec1: Top record
         rec2: Bottom record
-        
+
     Returns:
         Combined record with rec1 above rec2
     """
@@ -201,13 +201,13 @@ def vStack(rec1: str, rec2: str) -> str:
 def center(length: int, rec: str) -> str:
     """
     Center a record within a given width.
-    
+
     Adds padding on both sides to center the content.
-    
+
     Args:
         length: Target width
         rec: A record string
-        
+
     Returns:
         Centered record of the specified width
     """
@@ -230,13 +230,13 @@ def center(length: int, rec: str) -> str:
 def vputs(s: str, baseline: int = 0) -> str:
     """
     Create a vertical record from a string (one character per line).
-    
+
     Used for building tall bracket characters.
-    
+
     Args:
         s: String to arrange vertically
         baseline: Which line is the baseline
-        
+
     Returns:
         A vertical record
     """

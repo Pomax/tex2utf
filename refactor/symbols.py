@@ -44,7 +44,7 @@ from .commands import define, defb
 def init_symbols():
     """
     Initialize all symbol tables.
-    
+
     This function must be called before processing any LaTeX input.
     It sets up all the built-in command definitions.
     """
@@ -53,16 +53,16 @@ def init_symbols():
     # =========================================================================
     state.type_table["\\sum"] = "record"
     state.contents["\\sum"] = "3,3,1,0,__ \n❯  \n‾‾ "
-    
+
     state.type_table["\\int"] = "record"
     state.contents["\\int"] = "3,2,1,0,╭ \n| \n╯ "
-    
+
     state.type_table["\\oint"] = "record"
     state.contents["\\oint"] = "3,2,1,0,╭ \n⦶ \n╯ "
-    
+
     state.type_table["\\prod"] = "record"
     state.contents["\\prod"] = "3,4,1,0,___ \n│ │ \n    "
-    
+
     state.type_table["\\Sigma"] = "record"
     state.contents["\\Sigma"] = "3,2,1,0,__\n❯ \n‾‾"
 

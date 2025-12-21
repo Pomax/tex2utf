@@ -35,15 +35,15 @@ from .records import string2record, vputs
 def regenerate_angle_bracket(bracket_type: str, h: int, b: int) -> tuple:
     """
     Generate angle bracket lines with correct alignment.
-    
+
     Creates a tall angle bracket (⟨ or ⟩) that spans the given height,
     with the tip at the baseline and slanted lines above and below.
-    
+
     Args:
         bracket_type: "<" for left angle, ">" for right angle
         h: Desired height in lines
         b: Baseline position (where the tip goes)
-    
+
     Returns:
         Tuple of (lines, width) where lines is a list of strings
     """
@@ -92,10 +92,10 @@ def makecompound(
 ) -> str:
     """
     Create a compound bracket character from component pieces.
-    
+
     Builds a tall delimiter by combining top, middle, bottom, and
     extension characters. Used for parentheses, brackets, and braces.
-    
+
     Args:
         ascent: Number of lines above baseline (including baseline)
         descent: Number of lines below baseline
@@ -105,7 +105,7 @@ def makecompound(
         top: Top cap character
         bottom: Bottom cap character
         middle: Middle character (for braces)
-    
+
     Returns:
         String with one character per line (to be used with vputs)
     """
@@ -123,10 +123,10 @@ def makecompound(
 def makehigh_inplace(out: list, idx: int, h: int, b: int, left_sp: int, right_sp: int):
     """
     Expand a delimiter to a given height, modifying the output buffer in place.
-    
+
     Takes a simple delimiter character (like "(" or "[") and replaces it
     with a tall version using Unicode box-drawing characters.
-    
+
     Args:
         out: The output buffer (list of records)
         idx: Index into the buffer (can be negative)
@@ -136,25 +136,25 @@ def makehigh_inplace(out: list, idx: int, h: int, b: int, left_sp: int, right_sp
         right_sp: Spaces to add on the right
     """
     from .join import join_records
-    
+
     parts = out[idx].split(",", 4)
     s = parts[4] if len(parts) > 4 else ""
     debug_log(
         f"makehigh_inplace: idx={idx}, h={h}, b={b}, left_sp={left_sp}, right_sp={right_sp}, s='{s}'"
     )
-    
+
     # Handle empty delimiter (\\left. or \\right.)
     if s == ".":
         out[idx] = f"{parts[0]},{parts[1]},{parts[2]},{parts[3]}, "
         return
-    
+
     h = h if h > 0 else 1
     d = h - b - 1  # Descent (lines below baseline)
-    
+
     # Don't expand if already small enough
     if h < 2 or (h == 2 and s in "()<>"):
         return
-    
+
     # Character specifications: [base, exp_one, exp_real, top, bottom, middle]
     c = None
     if s == "(":
@@ -224,15 +224,15 @@ def makehigh_inplace(out: list, idx: int, h: int, b: int, left_sp: int, right_sp
         return
     else:
         return
-    
+
     # Build the tall delimiter using makecompound
     compound = makecompound(b + 1, d, *c)
     out[idx] = vputs(compound, b)
-    
+
     # Handle double bars (||)
     if len(s) == 2:
         out[idx] = join_records(out[idx], out[idx])
-    
+
     # Add spacing
     if left_sp:
         out[idx] = join_records(string2record(" " * left_sp), out[idx])

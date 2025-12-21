@@ -138,14 +138,14 @@ environment_none: Dict[str, bool] = {}
 def reset_state():
     """
     Reset all global state to initial values.
-    
+
     Useful for processing multiple documents or for testing.
     Does not reset symbol tables (type_table, contents, etc.)
     as those are typically set once at startup.
     """
     global level, chunks, tokenByToken, out, wait, action
     global curlength, secondtime, argStack, par
-    
+
     level[:] = [0]
     chunks[:] = [0]
     tokenByToken[:] = [0]

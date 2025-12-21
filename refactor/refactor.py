@@ -56,7 +56,7 @@ from .parser import paragraph
 def main():
     """
     Main entry point for tex2utf.
-    
+
     Parses command-line arguments, initializes the symbol tables,
     reads the input file, and processes it.
     """
@@ -76,7 +76,7 @@ def main():
     arg_parser.add_argument("--debug", action="store_true",
                            help="Enable debug output to stderr")
     args = arg_parser.parse_args()
-    
+
     # Apply configuration from command-line arguments
     config.linelength = args.linelength
     config.opt_by_par = args.by_par
@@ -84,10 +84,10 @@ def main():
     config.opt_ragged = args.ragged
     config.opt_noindent = args.noindent
     config.opt_debug = args.debug
-    
+
     # Initialize symbol tables (Greek letters, operators, environments, etc.)
     init_symbols()
-    
+
     # Read input file
     try:
         with open(args.filename, "r", encoding="utf-8") as f:
@@ -95,7 +95,7 @@ def main():
     except FileNotFoundError:
         print(f"Error: File '{args.filename}' not found", file=sys.stderr)
         sys.exit(1)
-    
+
     # Process the input
     if config.opt_by_par:
         # Process each paragraph separately (separated by blank lines)
@@ -105,7 +105,7 @@ def main():
     else:
         # Process entire file at once
         paragraph(content)
-    
+
     # Flush any remaining output
     stack.finishBuffer()
 
