@@ -37,7 +37,7 @@ from . import stack
 from . import commands
 from . import math_ops
 from .config import debug_log, tokenpattern, multitokenpattern, usualtokenclass
-from .text_transforms import make_text_fancy, make_text_bold, make_text_italic
+from .text_transforms import make_text_fancy, make_text_bold, make_text_italic, make_text_double
 
 
 def paragraph(input_text: str) -> bool:
@@ -276,6 +276,9 @@ def paragraph(input_text: str) -> bool:
             elif typ == "italic":
                 text = commands.get_balanced()
                 stack.puts(make_text_italic(text))
+            elif typ == "double":
+                text = commands.get_balanced()
+                stack.puts(make_text_double(text))
 
             # -----------------------------------------------------------------
             # Paragraph + self-printing

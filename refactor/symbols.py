@@ -130,6 +130,7 @@ def init_symbols():
         "\\mp": " ∓ ",        # Minus-plus
         "\\nabla": "∇",      # Nabla
         "\\ne": " ≠ ",        # Not equal
+        "\\neg": "¬",        # Negate
         "\\neq": " ≠ ",       # Not equal (alternative)
         "\\ni": " ∌ ",        # Contains as member
         "\\nmid": " ∤ ",      # Does not divide
@@ -198,6 +199,9 @@ def init_symbols():
 
     for cmd in ["mathit"]:
         state.type_table[f"\\{cmd}"] = "italic"
+
+    for cmd in ["mathbb"]:
+        state.type_table[f"\\{cmd}"] = "double"
 
     # =========================================================================
     # Commands to ignore completely
