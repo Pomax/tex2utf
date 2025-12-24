@@ -29,15 +29,19 @@ def test_file(tex_file):
         print("SKIP (known broken in original)")
         return None
 
-    print(f"Testing: {filename}", end=" ... ")
+    print(f"--- Testing: {filename}")
 
     # Run original
     orig_cmd = [sys.executable, "tex2utf.py", str(tex_file)]
     orig_out, orig_err, orig_code = run_command(orig_cmd)
 
+    print(f"------ original\n{orig_out}\n")
+
     # Run refactored
     refactor_cmd = [sys.executable, "refactor/refactor.py", str(tex_file)]
     ref_out, ref_err, ref_code = run_command(refactor_cmd)
+
+    print(f"------ refactor\n{ref_out}\n")
 
     if orig_code != 0:
         print(f"SKIP (original failed: {orig_err.strip()[:50]})")

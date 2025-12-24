@@ -9,10 +9,10 @@ Handler Types:
 --------------
 1. Simple handlers (e.g., open_curly, dollar):
    Called directly when their trigger is encountered.
-
+   
 2. Argument-collecting handlers (e.g., subscript, superscript):
    Start a group to collect arguments, then call a completion function.
-
+   
 3. Environment handlers (f_begin, f_end):
    Process \\begin{env} and \\end{env} commands.
 
@@ -46,12 +46,12 @@ from . import math_ops
 def get_balanced():
     """
     Get a balanced group from the input.
-
+    
     If the next token is '{', reads until the matching '}'.
     Otherwise, returns just the next token.
-
+    
     This is used to read macro arguments.
-
+    
     Returns:
         The content of the group (without braces), or None if no token
     """
@@ -62,7 +62,7 @@ def get_balanced():
     state.par = state.par[len(tok):]
     if tok != "{":
         return tok
-
+    
     # Read until matching }
     result = ""
     lev = 1
@@ -94,7 +94,7 @@ def close_curly():
 def dollar():
     """
     Handle single dollar sign - toggle inline math mode.
-
+    
     If already in $...$ mode, closes it. Otherwise, opens it.
     """
     if len(state.wait) > 1 and state.wait[-1] == "$":
@@ -108,12 +108,12 @@ def dollar():
 def ddollar():
     """
     Handle double dollar sign - toggle display math mode.
-
+    
     Display math is centered on its own line.
     """
     from . import config
     from .output import printrecord
-
+    
     if len(state.wait) > 1 and state.wait[-1] == "$$":
         # Closing display math
         stack.trim_end(len(state.out) - 1)
@@ -140,7 +140,7 @@ def ddollar():
 def bbackslash():
     """
     Handle \\\\ (backslash-backslash) - line/row break.
-
+    
     In display math: ends the equation
     In matrices/tables: ends the current row
     Otherwise: paragraph break
@@ -164,7 +164,7 @@ def bbackslash():
 def ampersand():
     """
     Handle & - column separator in matrices and tables.
-
+    
     Finishes the current cell and starts a new one.
     """
     if len(state.wait) > 1 and state.wait[-1] == "endCell":
@@ -177,7 +177,7 @@ def ampersand():
 def matrix():
     """
     Start a matrix environment.
-
+    
     Sets up nested groups for: matrix > rows > cells
     """
     stack.start("endMatrix")
@@ -188,7 +188,7 @@ def matrix():
 def endmatrix(args_str: str = "1;c"):
     """
     End a matrix environment and format the result.
-
+    
     Args:
         args_str: "spacing;alignments" where alignments is column specs
                   e.g., "1;c" for centered, "1;l;r" for left,right
@@ -210,20 +210,20 @@ def endmatrixArg(args_str: str):
 def halign(explength_str: str, *c_args):
     """
     Perform horizontal alignment of matrix columns.
-
+    
     Calculates column widths and aligns content according to
     the specified alignment characters (l, c, r).
-
+    
     Args:
         explength_str: Extra spacing between columns
         *c_args: Column alignment specifiers ('l', 'c', 'r')
     """
     from .records import vStack
-
+    
     explength = int(explength_str) if explength_str else 1
     c = list(c_args) if c_args else []
     w = []  # Column widths
-
+    
     # Calculate column widths
     num_rows = len(state.chunks) - state.level[-1]
     for r in range(num_rows):
@@ -239,17 +239,17 @@ def halign(explength_str: str, *c_args):
                 w.append(0)
             if l > w[col]:
                 w[col] = l
-
+    
     # Add inter-column spacing
     for i in range(len(w) - 1):
         w[i] += explength
-
+    
     # Default to center alignment
     if not c:
         c = ["c"] * len(w)
     while len(c) < len(w):
         c.append(c[-1] if c else "c")
-
+    
     # Apply alignment to each cell
     for r in range(num_rows):
         if r == num_rows - 1:
@@ -269,13 +269,13 @@ def halign(explength_str: str, *c_args):
                     pad = w[col] - explength - get_length(state.out[idx])
                     state.out[idx] = join_records(string2record(" " * pad), state.out[idx])
                     state.out[idx] = join_records(state.out[idx], string2record(" " * explength))
-
+    
     # Collapse all rows, then stack vertically
     stack.collapseAll()
     base_idx = state.chunks[state.level[-1]]
     for i in range(base_idx + 1, len(state.out)):
         state.out[base_idx] = vStack(state.out[base_idx], state.out[i])
-
+    
     # Set baseline to middle
     h = get_height(state.out[base_idx])
     state.out[base_idx] = setbaseline(state.out[base_idx], (h - 1) // 2)
@@ -298,7 +298,7 @@ def superscript():
 def over():
     """
     Handle \\over command (TeX-style fraction).
-
+    
     Syntax: {numerator \\over denominator}
     """
     if len(state.wait) > 1 and state.wait[-1] == "}":
@@ -325,7 +325,7 @@ def over():
 def choose():
     """
     Handle \\choose command (binomial coefficient).
-
+    
     Syntax: {n \\choose k}
     """
     if len(state.wait) > 1 and state.wait[-1] == "}":
@@ -367,7 +367,7 @@ def item():
 def at():
     """
     Handle @ command - commutative diagram arrows.
-
+    
     Syntax:
     - @>>> : Right arrow
     - @<<< : Left arrow
@@ -429,7 +429,7 @@ def do_par():
 def left():
     """
     Handle \\left delimiter.
-
+    
     Starts collection of: left_delim, content, right_delim
     The delimiters will be scaled to match content height.
     """
@@ -457,7 +457,7 @@ def right():
 def f_leftright():
     """
     Complete \\left...\\right pair processing.
-
+    
     Scales delimiters to match content height and joins them.
     """
     stack.trim(1)
@@ -532,7 +532,7 @@ def do_matrix():
 def f_begin():
     """
     Handle \\begin{environment} command.
-
+    
     Looks up the environment in state.environment and calls
     the appropriate begin handlers.
     """
@@ -558,7 +558,7 @@ def f_begin():
 def f_end():
     """
     Handle \\end{environment} command.
-
+    
     Calls the appropriate end handlers for the environment.
     """
     stack.collapse(1)
@@ -584,62 +584,26 @@ def f_end():
 def f_trig_function(func_name: str):
     """
     Handle trigonometric functions (sin, cos, etc.).
-
+    
     Outputs the function name and wraps the argument in parentheses
     if it's a braced group.
-
+    
     Args:
         func_name: The function name without backslash
     """
-    # Skip whitespace
+    from . import parser
+    
+    stack.puts(func_name)
     state.par = state.par.lstrip()
 
     if not state.par:
-        stack.puts(func_name)
         return
 
-    # Check if already has parentheses via \left( or just (
     if state.par.startswith("\\left"):
-        stack.puts(func_name)
-        return  # Let normal processing handle it
+        return
     if state.par.startswith("("):
-        # Already parenthesized - output function name directly attached to the paren
-        # Find matching closing paren
-        level = 0
-        i = 0
-        for i, ch in enumerate(state.par):
-            if ch == "(":
-                level += 1
-            elif ch == ")":
-                level -= 1
-                if level == 0:
-                    break
-        # Extract the parenthesized expression including parens
-        paren_expr = state.par[:i+1]
-        state.par = state.par[i+1:]
-        stack.puts(func_name + paren_expr)
         return
 
-    # Output the function name
-    stack.puts(func_name)
-
-    # Check if followed by a LaTeX command
-    if state.par.startswith("\\"):
-        match = re.match(r"^\\([a-zA-Z]+)", state.par)
-        if match:
-            cmd_name = "\\" + match.group(1)
-            cmd_type = state.type_table.get(cmd_name)
-            # If it's a simple string replacement (like \theta -> θ), wrap it
-            if cmd_type == "string":
-                full_match = re.match(r"^(\\[a-zA-Z]+)\s*", state.par)
-                state.par = state.par[len(full_match.group(0)):]
-                stack.puts("(" + state.contents.get(cmd_name, cmd_name[1:]) + ")")
-                return
-            # For all other command types (sub1, sub2, sub3, record, def, etc.),
-            # let normal processing handle it without parentheses
-            return
-
-    # Get the next argument (braced group or single token)
     if state.par.startswith("{"):
         arg = get_balanced()
         if arg is not None:
@@ -665,7 +629,6 @@ def f_trig_function(func_name: str):
             state.par = old_par
             stack.puts(")")
     elif re.match(r"^[a-zA-Z0-9]", state.par):
-        # Single letter/digit
         arg = state.par[0]
         state.par = state.par[1:]
         stack.puts("(" + arg + ")")
@@ -723,7 +686,7 @@ def def_cmd():
 def def_exp():
     """Handle \\def in expansion mode (define a macro)."""
     from .config import macro
-
+    
     match = re.match(r"(([^\\{]|\\.)*)\{", state.par)
     if not match:
         return
@@ -744,13 +707,13 @@ def def_exp():
 def define(arg: str, definition: str):
     """
     Define a macro.
-
+    
     Args:
         arg: Macro name and parameter spec (e.g., "\\foo#1#2")
         definition: Replacement text with #1, #2, etc.
     """
     from .config import active
-
+    
     match = re.match(f"^({active})", arg)
     if not match:
         return
