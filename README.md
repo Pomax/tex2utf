@@ -6,6 +6,8 @@ This repo is a UTF8 massaging of the `tex2mail` tool (with some fixes around how
 
 The original can be found over on https://ctan.org/pkg/tex2mail.
 
+{:toc}
+
 ## Usage
 
 Place `tex2utf.pl` in a dir somewhere, then invoke it using perl as:
